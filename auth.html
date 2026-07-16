@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in — Galera</title>
+  <meta name="description" content="Sign in to Galera or become a member — free, with email or a social account.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230f0e0c'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23c8a24b' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Manrope:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="auth">
+
+  <main id="main">
+    <section class="wrap page-hero" style="text-align:center; justify-items:center;">
+      <span class="eyebrow reveal" style="justify-content:center">Membership</span>
+      <h1 class="reveal" data-delay="1" style="font-size:clamp(2.2rem,5vw,3.6rem)">Join the <span class="italic gold">crew.</span></h1>
+      <p class="lede reveal" data-delay="2" style="margin:0 auto">Membership is free. It opens the forum, saving and likes, your own uploads — and lets you support artists when you’re ready.</p>
+    </section>
+
+    <section class="wrap" style="padding-bottom:clamp(64px,9vw,120px)">
+      <div class="form-card reveal">
+        <div class="auth-tabs" role="tablist">
+          <button id="tabLogin" role="tab" aria-selected="true">Sign in</button>
+          <button id="tabRegister" role="tab" aria-selected="false">Register</button>
+        </div>
+
+        <!-- ======== LOGIN ======== -->
+        <form id="loginForm" novalidate>
+          <div style="display:grid; gap:18px;">
+            <div class="field">
+              <label for="liEmail">Email</label>
+              <input id="liEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+              <span class="err">Please enter a valid email address.</span>
+            </div>
+            <div class="field">
+              <label for="liPass">Password</label>
+              <input id="liPass" type="password" autocomplete="current-password" placeholder="••••••••" required>
+              <span class="err">Your password is required.</span>
+            </div>
+            <label class="check-row"><input type="checkbox" id="liRemember" checked> Remember me on this device</label>
+            <button class="btn btn-solid btn-wide" type="submit">Sign in</button>
+            <button class="btn btn-wide" type="button" id="passkeyBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="9" r="4"/><path d="M14 12h7l-2 2 2 2-2 2h-3v-3.5"/></svg>
+              Sign in with a passkey
+            </button>
+            <div class="form-divider">or continue with</div>
+            <div class="social-row">
+              <button type="button" class="social-btn" data-social="Google">Google</button>
+              <button type="button" class="social-btn" data-social="Apple">Apple</button>
+              <button type="button" class="social-btn" data-social="Facebook">Facebook</button>
+            </div>
+            <p class="form-foot"><a href="#" id="forgot">Forgotten your password?</a></p>
+          </div>
+        </form>
+
+        <!-- ======== REGISTER ======== -->
+        <form id="registerForm" hidden novalidate>
+          <div style="display:grid; gap:18px;">
+            <div class="field">
+              <label for="rgName">Full name</label>
+              <input id="rgName" type="text" autocomplete="name" placeholder="Ada Lovelace" required>
+              <span class="err">Please tell us your name.</span>
+            </div>
+            <div class="field">
+              <label for="rgEmail">Email</label>
+              <input id="rgEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+              <span class="err">Please enter a valid email address.</span>
+            </div>
+            <div class="field">
+              <label for="rgPass">Password</label>
+              <input id="rgPass" type="password" autocomplete="new-password" placeholder="At least 8 characters" required>
+              <div class="strength" id="strength" aria-hidden="true"><i></i></div>
+              <span class="hint" id="strengthHint">Use 8+ characters. A phrase beats a puzzle.</span>
+              <span class="err">Password must be at least 8 characters.</span>
+            </div>
+            <label class="check-row"><input type="checkbox" id="rgMfa"> Protect my account with two-factor authentication (recommended)</label>
+            <label class="check-row"><input type="checkbox" id="rgTerms" required> I agree to the <a class="gold" href="legal.html#terms" target="_blank">Terms</a> and <a class="gold" href="legal.html" target="_blank">Privacy Policy</a></label>
+            <button class="btn btn-solid btn-wide" type="submit">Create my membership — free</button>
+            <div class="form-divider">or register with</div>
+            <div class="social-row">
+              <button type="button" class="social-btn" data-social="Google">Google</button>
+              <button type="button" class="social-btn" data-social="Apple">Apple</button>
+              <button type="button" class="social-btn" data-social="Facebook">Facebook</button>
+            </div>
+          </div>
+        </form>
+
+        <p class="form-foot dim" style="font-size:.75rem">Demo membership: your details stay in this browser only. Nothing is sent anywhere.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/auth.js"></script>
+</body>
+</html>

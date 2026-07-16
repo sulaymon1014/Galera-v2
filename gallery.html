@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artworks — Galera</title>
+  <meta name="description" content="Browse artworks on Galera — character art, fantasy, sci-fi and scenery by supported digital artists. Filter by category and artist.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230f0e0c'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23c8a24b' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Manrope:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="gallery">
+
+  <main id="main">
+    <section class="wrap page-hero">
+      <span class="eyebrow reveal">Artworks</span>
+      <h1 class="reveal" data-delay="1">The feed, without<br>the <span class="italic gold">algorithm.</span></h1>
+      <p class="lede reveal" data-delay="2">Every piece public and full-size. Works marked <span class="gold">◆</span> come with 4K files, PSDs and process videos for that artist’s supporters.</p>
+    </section>
+
+    <section class="wrap" style="padding-bottom:clamp(64px,9vw,120px)">
+      <div class="gallery-layout">
+
+        <!-- facets -->
+        <aside class="facets" id="facets" aria-label="Filter artworks">
+          <div class="facets-head">
+            <h3 class="serif">Filters</h3>
+            <button class="icon-btn close-x" id="facetsClose" aria-label="Close filters">✕</button>
+          </div>
+          <div id="facetGroups"></div>
+        </aside>
+        <div class="facets-footer">
+          <button class="btn btn-wide" id="facetsClearM">Clear</button>
+          <button class="btn btn-solid btn-wide" id="facetsApply">Apply filters</button>
+        </div>
+
+        <!-- results -->
+        <div>
+          <div class="gallery-toolbar">
+            <span class="result-count" id="resultCount" aria-live="polite"></span>
+            <button class="btn btn-sm filters-open-btn" id="facetsOpen">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+              Filters <span id="facetBadge"></span>
+            </button>
+            <button class="btn btn-sm" id="uploadOpen">↑ Upload art</button>
+            <select class="sort-select" id="sortSel" aria-label="Sort artworks">
+              <option value="trending">Trending</option>
+              <option value="newest">Newest first</option>
+              <option value="loved">Most loved</option>
+            </select>
+          </div>
+
+          <div class="chips" id="chips" aria-live="polite"></div>
+          <div id="uploadStrip"></div>
+          <div class="masonry" id="grid"></div>
+          <div class="empty-state" id="emptyState" hidden>
+            <div class="big">Nothing here yet.</div>
+            <p>No artworks match this combination of filters.</p>
+            <button class="btn" id="emptyClear">Clear all filters</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- lightbox -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Artwork detail">
+    <div class="lightbox-backdrop" data-lb-close></div>
+    <button class="icon-btn lightbox-close" data-lb-close aria-label="Close artwork">✕</button>
+    <button class="icon-btn lightbox-nav prev" id="lbPrev" aria-label="Previous artwork">←</button>
+    <button class="icon-btn lightbox-nav next" id="lbNext" aria-label="Next artwork">→</button>
+    <div class="lightbox-panel" data-lb-close>
+      <div class="lightbox-card" id="lbCard"></div>
+    </div>
+  </div>
+
+  <!-- upload modal -->
+  <div class="reader" id="uploadModal" role="dialog" aria-modal="true" aria-label="Upload artwork">
+    <div class="lightbox-backdrop" data-u-close></div>
+    <button class="icon-btn lightbox-close" data-u-close aria-label="Close upload">✕</button>
+    <div class="reader-panel" data-u-close>
+      <form class="reader-card" id="uploadForm" style="max-width:520px" novalidate>
+        <span class="eyebrow">Upload artwork</span>
+        <h2 class="serif" style="font-size:clamp(1.5rem,2.6vw,2rem)">Show us what’s<br>on your canvas.</h2>
+        <div class="field">
+          <label for="upTitle">Title</label>
+          <input id="upTitle" type="text" placeholder="Name the piece" required>
+          <span class="err">Every piece deserves a title.</span>
+        </div>
+        <div class="field">
+          <label for="upCat">Category</label>
+          <select id="upCat"></select>
+        </div>
+        <div class="field">
+          <label for="upFile">Image file</label>
+          <input id="upFile" type="file" accept="image/*" required>
+          <span class="hint">JPG or PNG. Stored in this browser only (demo) — resized to 1280px.</span>
+          <span class="err">Choose an image to upload.</span>
+        </div>
+        <button class="btn btn-solid" type="submit">Publish to my page</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/gallery.js"></script>
+</body>
+</html>

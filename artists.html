@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artists — Galera</title>
+  <meta name="description" content="The artists of Galera — digital painters sharing their work and process, supported directly by the people who love it.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230f0e0c'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23c8a24b' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Manrope:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="artists">
+
+  <main id="main">
+    <section class="wrap page-hero">
+      <span class="eyebrow reveal">The Artists</span>
+      <h1 class="reveal" data-delay="1">Follow free.<br>Support what <span class="italic gold">lasts.</span></h1>
+      <p class="lede reveal" data-delay="2">Every artist here posts their finished work publicly. Supporters get the studio: files, process, votes, and the artist’s time.</p>
+      <input class="search-input reveal" data-delay="3" id="artistSearch" type="search"
+             placeholder="Search by name or style…" aria-label="Search artists">
+    </section>
+
+    <section class="wrap" style="padding-bottom:clamp(64px,9vw,120px)">
+      <div class="artist-grid" id="artistGrid"></div>
+      <div class="empty-state" id="artistEmpty" hidden>
+        <div class="big">No one by that name.</div>
+        <p>Try a style — “sci-fi”, “gold”, “soft light” — or browse everyone above.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/artists.js"></script>
+</body>
+</html>

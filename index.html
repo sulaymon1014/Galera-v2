@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galera — Support the Artists Behind the Art You Love</title>
+  <meta name="description" content="Galera is where digital artists share their work and the people who love it keep it coming. Follow free, support from $5/month, unlock the studio.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230f0e0c'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23c8a24b' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Manrope:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="home">
+
+  <main id="main">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero-art" id="heroArt" aria-hidden="true"></div>
+      <div class="wrap hero-content">
+        <span class="hero-badge reveal"><span class="dot"></span> <span id="dropNote">New drop every Friday</span></span>
+        <h1 class="reveal" data-delay="1">Love the art?<br><span class="italic">Fund</span> the artist.</h1>
+        <p class="lede reveal" data-delay="2">Galera is where digital artists post their work and the people who love it keep it coming. Follow for free — or support from $5/month and step inside the studio: 4K files, PSDs, process videos, live paint-alongs.</p>
+        <div class="hero-cta reveal" data-delay="3">
+          <a class="btn btn-solid" href="gallery.html">Browse artworks</a>
+          <a class="btn" href="artists.html" id="heroJoin">Meet the artists</a>
+        </div>
+      </div>
+      <div class="hero-meta" id="heroMeta"></div>
+      <div class="scroll-hint" aria-hidden="true"></div>
+    </section>
+
+    <!-- ============ TICKER ============ -->
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+
+    <!-- ============ TRENDING ============ -->
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="stack">
+            <span class="eyebrow">01 — Trending</span>
+            <h2>What everyone is<br><span class="italic gold">staring</span> at this week.</h2>
+          </div>
+          <a class="link-arrow" href="gallery.html">All artworks</a>
+        </div>
+        <div class="feat-row" id="featRow"></div>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section class="section" style="background:var(--bg-2); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft);">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="stack">
+            <span class="eyebrow">02 — How it works</span>
+            <h2>Three steps.<br>No algorithm.</h2>
+          </div>
+          <div class="stat-row" id="statRow"></div>
+        </div>
+        <ol class="rules-list" style="max-width:720px">
+          <li class="reveal"><span><strong style="color:var(--ink)">Follow for free.</strong> Every finished piece is public, full-size, no watermark walls. See something you love? Follow the artist and it keeps coming.</span></li>
+          <li class="reveal" data-delay="1"><span><strong style="color:var(--ink)">Pick a tier, from $5/month.</strong> Your pledge goes to the artist — they keep 92%. It is the difference between their art and their day job.</span></li>
+          <li class="reveal" data-delay="2"><span><strong style="color:var(--ink)">Step inside the studio.</strong> WIPs, 4K downloads, layered PSDs, real-time process videos, votes on the next piece, live paint-alongs.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ FEATURED ARTISTS ============ -->
+    <section class="section">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="stack">
+            <span class="eyebrow">03 — Artists</span>
+            <h2>The people behind<br>the <span class="italic gold">wallpapers.</span></h2>
+          </div>
+          <a class="link-arrow" href="artists.html">All artists</a>
+        </div>
+        <div class="artist-grid" id="artistRow"></div>
+      </div>
+    </section>
+
+    <!-- ============ EXPLORE ============ -->
+    <section class="section" style="border-top:1px solid var(--line-soft);">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="stack">
+            <span class="eyebrow">04 — Explore</span>
+            <h2>Process, guides,<br>honest numbers.</h2>
+          </div>
+          <a class="link-arrow" href="explore.html">All articles</a>
+        </div>
+        <div class="journal-grid" id="journalRow"></div>
+      </div>
+    </section>
+
+    <!-- ============ COMMUNITY ============ -->
+    <section class="section" style="background:var(--bg-2); border-top:1px solid var(--line-soft);">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <div class="stack">
+            <span class="eyebrow">05 — Community</span>
+            <h2>Artists and supporters,<br>actually <span class="italic gold">talking.</span></h2>
+          </div>
+          <a class="link-arrow" href="community.html">Visit the forum</a>
+        </div>
+        <div class="review-rail" id="reviewRail"></div>
+        <div style="margin-top:36px" class="reveal">
+          <a class="btn btn-solid" href="auth.html?mode=register" id="commJoin">Join free</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ NEWSLETTER ============ -->
+    <section class="news-strip">
+      <div class="wrap news-inner">
+        <div style="display:grid; gap:10px;">
+          <h3 class="serif" style="font-size:clamp(1.4rem,2.5vw,2rem)">The Friday Drop</h3>
+          <p class="dim">New works, one process breakdown, zero spam. Once a week.</p>
+        </div>
+        <form class="news-form" novalidate>
+          <input type="email" placeholder="your@email.com" aria-label="Email address" required>
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/home.js"></script>
+</body>
+</html>

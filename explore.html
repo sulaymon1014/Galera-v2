@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explore — Galera</title>
+  <meta name="description" content="Process breakdowns, creator guides and honest essays from the Galera community.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230f0e0c'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-size='36' fill='%23c8a24b' text-anchor='middle'%3EG%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Manrope:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body data-page="explore">
+
+  <main id="main">
+    <section class="wrap page-hero">
+      <span class="eyebrow reveal">Explore</span>
+      <h1 class="reveal" data-delay="1">How the art<br>gets <span class="italic gold">made.</span></h1>
+      <p class="lede reveal" data-delay="2">Process breakdowns, creator guides and honest numbers — for supporters who want to understand, and artists who want to grow.</p>
+    </section>
+
+    <section class="wrap" style="padding-bottom:clamp(64px,9vw,120px)">
+      <div id="featureSlot"></div>
+      <div class="journal-grid" id="journalGrid"></div>
+    </section>
+
+    <!-- newsletter -->
+    <section class="news-strip">
+      <div class="wrap news-inner">
+        <div style="display:grid; gap:10px;">
+          <h3 class="serif" style="font-size:clamp(1.4rem,2.5vw,2rem)">The Friday Drop</h3>
+          <p class="dim">Every article above, before it’s above. Plus the week’s new works.</p>
+        </div>
+        <form class="news-form" novalidate>
+          <input type="email" placeholder="your@email.com" aria-label="Email address" required>
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- reader overlay -->
+  <div class="reader" id="reader" role="dialog" aria-modal="true" aria-label="Article">
+    <div class="lightbox-backdrop" data-r-close></div>
+    <button class="icon-btn lightbox-close" data-r-close aria-label="Close article">✕</button>
+    <div class="reader-panel" data-r-close>
+      <article class="reader-card" id="readerCard"></article>
+    </div>
+  </div>
+
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/explore.js"></script>
+</body>
+</html>
