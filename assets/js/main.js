@@ -91,7 +91,19 @@
   $('#navOpen').addEventListener('click', () => { mnav.classList.add('open'); mnav.setAttribute('aria-hidden', 'false'); });
   $('.close-x', mnav).addEventListener('click', () => { mnav.classList.remove('open'); mnav.setAttribute('aria-hidden', 'true'); });
 
-  const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 24);
+  /* header: solidify past the fold; hide on scroll-down, reveal on scroll-up */
+  let lastY = window.scrollY;
+  const onScroll = () => {
+    const y = window.scrollY;
+    header.classList.toggle('scrolled', y > 24);
+    if (Math.abs(y - lastY) > 6) {              /* ignore tiny jitters */
+      const goingDown = y > lastY;
+      /* never hide near the very top, or while a menu/overlay is open */
+      const overlayOpen = mnav.classList.contains('open') || document.body.style.overflow === 'hidden';
+      header.classList.toggle('hidden', goingDown && y > 140 && !overlayOpen);
+      lastY = y;
+    }
+  };
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
@@ -103,7 +115,7 @@
       <div class="footer-grid">
         <div class="footer-brand">
           <a class="brand" href="index.html">GALER<em>A</em></a>
-          <p>Where digital artists share their work — and the people who love it keep it coming. Follow free, support from $5/mo.</p>
+          <p>Where digital artists share their work — and the people who love it keep it coming. Follow for free, support the artists you love.</p>
         </div>
         <div>
           <h4>Browse</h4>
@@ -136,7 +148,6 @@
       <div class="footer-word" aria-hidden="true">GALERA</div>
       <div class="footer-base">
         <span>© <span id="yr"></span> Galera. Demo build — artworks are placeholders © their original artists (incl. WLOP), to be replaced before deployment.</span>
-        <span>Artists keep 92% of every pledge.</span>
       </div>
     </div>`;
   document.body.appendChild(footer);
@@ -211,18 +222,18 @@
     const artists = q ? D.ARTISTS.filter(a => match(a.name) || match(a.practice) || match(a.bio)).slice(0, 4) : D.ARTISTS.slice(0, 3);
     const posts = q ? D.JOURNAL.filter(j => match(j.title) || match(j.excerpt)).slice(0, 3) : D.JOURNAL.slice(0, 2);
     let html = '';
-    if (works.length) {
-      html += `<div class="sr-group">Artworks</div>` + works.map(w => `
-        <a class="sr-item" href="gallery.html?art=${w.id}">
-          <span class="thumb"><img src="${w.img}" alt="" loading="lazy"></span>
-          <span><span class="t">${esc(w.title)}</span><br><span class="s">${esc(D.artistById[w.artist].name)} · ${esc(w.cat)} · ♥ ${D.fmtCount(w.likes)}</span></span>
-        </a>`).join('');
-    }
     if (artists.length) {
       html += `<div class="sr-group">Artists</div>` + artists.map(a => `
         <a class="sr-item" href="artist.html?a=${a.id}">
           <span class="thumb"><img src="${a.avatar}" alt="" loading="lazy"></span>
           <span><span class="t">${esc(a.name)}</span><br><span class="s">${esc(a.practice)} · ${D.fmtCount(a.supporters)} supporters</span></span>
+        </a>`).join('');
+    }
+    if (works.length) {
+      html += `<div class="sr-group">Artworks</div>` + works.map(w => `
+        <a class="sr-item" href="gallery.html?art=${w.id}">
+          <span class="thumb"><img src="${w.img}" alt="" loading="lazy"></span>
+          <span><span class="t">${esc(w.title)}</span><br><span class="s">${esc(D.artistById[w.artist].name)} · ${esc(w.cat)} · ♥ ${D.fmtCount(w.likes)}</span></span>
         </a>`).join('');
     }
     if (posts.length) {

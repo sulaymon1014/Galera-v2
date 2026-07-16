@@ -173,15 +173,16 @@
   /* ------------------------------------------------ journal */
   const JOURNAL = [
     {
-      id: 'support-works', title: 'What Your $5 Actually Does',
-      kicker: 'Guide', date: 'June 2026', readTime: '5 min',
+      id: 'pricing-guide', title: 'A Guide to Pricing Your Work',
+      kicker: 'Guide', date: 'June 2026', readTime: '6 min',
       cover: IMG + 'l14.jpg',
-      excerpt: 'Behind every finished piece are ~90 hours nobody pays for. Here is exactly where a supporter tier goes, line by honest line.',
+      excerpt: 'You set the price here — the platform never does. A practical guide to pricing your tiers and commissions without underselling the ninety hours behind each piece.',
       body: [
-        'A finished illustration is the visible tenth of an invisible job. Behind the piece you just liked are sketches, dead ends, colour studies, hardware, software licences, and the roughly ninety unpaid hours that separate a hobby from a profession.',
-        'When you join an artist’s Sketchbook tier, the money is not a tip — it is the difference between an artist taking client work that erases their own voice, and painting the work you followed them for in the first place. Five dollars is small alone. Five dollars times two thousand people is a salary, and a salary is creative freedom.',
-        'What do you get? Everything the public feed never sees: works in progress, abandoned versions, the 40-minute recording of a jewellery pass, the layered file with every decision preserved. Following an artist shows you what they made. Supporting one shows you how — and quietly decides whether there will be a next one.',
-        'Our advice: pick one artist whose work you would miss, not five you merely like. Depth beats breadth — for you and for them.'
+        'The first thing to understand about pricing on Galera: it is yours to set. The platform takes no cut of what you charge beyond the flat 8% that keeps the servers running — every tier price, every commission rate, every one-off is a number you choose. That freedom is also the hard part, because most artists price from fear rather than value.',
+        'Start with your tiers, not your art. A healthy page usually has three: an entry tier around the price of a coffee that buys people into your process, a middle tier — where most of your income will live — that adds files, PSDs and process videos, and a top tier for the few who want your time directly. Price the middle tier at what a month of your best work is honestly worth to someone who loves it, then set the others on either side.',
+        'The math that matters is not per-person, it is per-thousand. A single five-dollar pledge is a tip; five dollars times two thousand people is a salary, and a salary is creative freedom. This is why undercharging hurts more than it helps — a tier priced too low needs an impossible crowd to become a living, and it quietly tells your best supporters their support means less than it does.',
+        'For commissions, price the hours, not the guess. Track how long a piece actually takes — sketch, revisions, render, the dead ends — and set an hourly floor you would not resent. Raise it every time your waitlist grows; a full queue is the clearest signal on earth that your price is too low.',
+        'Last rule: never apologise for a number in public. State the price, list what it includes, and let it stand. The supporters you want are the ones who see the ninety hours behind the piece — and they would rather pay you fairly than watch you burn out for free.'
       ]
     },
     {
@@ -297,20 +298,13 @@
     }
   ];
 
-  /* ----------------------------------------------- featured drop */
-  const DROP = {
-    title: 'SLOW LIGHT',
-    tagline: 'Twenty-four works · four artists · new drops every Friday',
-    note: 'This week: “Beneath the Blossoms” — supporter early access ends Friday'
-  };
-
   /* helpers */
   const byId = (arr) => Object.fromEntries(arr.map(x => [x.id, x]));
   const fmtCount = (n) => n >= 1000000 ? (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
     : n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
 
   window.GALERA = {
-    ARTISTS, ARTWORKS, TIERS, CATEGORIES, JOURNAL, REVIEWS, THREADS, DROP,
+    ARTISTS, ARTWORKS, TIERS, CATEGORIES, JOURNAL, REVIEWS, THREADS,
     artistById: byId(ARTISTS),
     artworkById: byId(ARTWORKS),
     articleById: byId(JOURNAL),

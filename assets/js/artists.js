@@ -17,7 +17,7 @@
         <div class="name">${esc(a.name)}</div>
         <div class="sub"><span>${esc(a.practice)}</span><span>${a.works} works</span></div>
         <div class="sub" style="margin-top:6px"><span>${D.fmtCount(a.followers)} followers</span><span>${D.fmtCount(a.supporters)} supporters</span></div>
-        <div class="support-from">${pledges[a.id] ? '♥ You support this artist' : `Support from $${D.TIERS[0].price}/mo →`}</div>
+        <div class="support-from">${pledges[a.id] ? '♥ You support this artist' : 'Support Artist →'}</div>
       </a>`;
     const render = (q) => {
       q = (q || '').trim().toLowerCase();

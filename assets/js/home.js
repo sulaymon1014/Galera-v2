@@ -6,10 +6,6 @@
 
   /* hero */
   $('#heroArt').innerHTML = `<img src="assets/img/art/hero.jpg" alt="">`;
-  $('#dropNote').textContent = D.DROP.tagline;
-  $('#heroMeta').innerHTML = `
-    <span><strong>${esc(D.DROP.title)}</strong></span>
-    <span>${esc(D.DROP.note)}</span>`;
 
   /* member-aware CTA */
   if (G.Auth.member) {
@@ -51,7 +47,7 @@
       <div class="card-row"><img class="avatar-img" src="${a.avatar}" alt=""></div>
       <div class="name">${esc(a.name)}</div>
       <div class="sub"><span>${esc(a.practice)}</span><span>${D.fmtCount(a.followers)} followers</span></div>
-      <div class="support-from">Support from $${D.TIERS[0].price}/mo →</div>
+      <div class="support-from">Support Artist →</div>
     </a>`).join('');
 
   /* journal preview */
