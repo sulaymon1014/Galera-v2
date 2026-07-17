@@ -205,7 +205,7 @@
           <button class="btn" id="lbFav">${fav ? '♥ Saved' : '♡ Save'}</button>
           <button class="btn" id="lbShare" title="Copy link">Share</button>
         </div>
-        <a class="btn btn-solid btn-wide" href="artist.html?a=${artist.id}#tiers">Support ${esc(artist.name)} — from $${D.TIERS[0].price}/mo</a>
+        <a class="btn btn-solid btn-wide" href="artist.html?a=${artist.id}#tiers">Support ${esc(artist.name)} — from $${D.lowestPrice(artist.id)}/mo</a>
         ${related.length ? `
         <div class="related-strip">
           <span class="eyebrow" style="font-size:.62rem">More from ${esc(artist.name)}</span>

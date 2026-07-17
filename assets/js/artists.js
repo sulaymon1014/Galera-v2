@@ -43,13 +43,13 @@
       const active = pledges[a.id] === t.id;
       return `
         <div class="tier-card ${t.featured ? 'featured' : ''}">
-          ${t.featured ? '<span class="tier-tag">Most popular</span>' : ''}
-          <h3 class="serif">${t.name}</h3>
+          ${t.featured ? `<span class="tier-tag">${esc(t.badge || 'Most popular')}</span>` : ''}
+          <h3 class="serif">${esc(t.name)}</h3>
           <div class="tier-price">$${t.price}<small> /month</small></div>
-          <p class="dim" style="font-size:.88rem">${t.blurb}</p>
-          <ul>${t.perks.map(p => `<li>${p}</li>`).join('')}</ul>
+          <p class="dim" style="font-size:.88rem">${esc(t.blurb)}</p>
+          <ul>${t.perks.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
           <button class="btn ${active ? '' : 'btn-solid'} btn-wide" data-tier="${t.id}">
-            ${active ? '♥ Supporting — cancel' : `Join ${t.name}`}
+            ${active ? '♥ Supporting — cancel' : esc(t.cta || 'Join ' + t.name)}
           </button>
         </div>`;
     }
@@ -93,7 +93,8 @@
               <h2>Step inside the studio.</h2>
             </div>
           </div>
-          <div class="tier-grid reveal" data-delay="1">${D.TIERS.map(tierCard).join('')}</div>
+          <p class="dim reveal" style="font-size:.9rem; margin-bottom:22px">${esc(a.name)} designs these tiers — names, perks and prices are all theirs. Every artist on Galera builds their own.</p>
+          <div class="tier-grid reveal" data-delay="1">${D.tiersFor(a.id).map(tierCard).join('')}</div>
         </div>
 
         <div style="margin-top:clamp(48px,7vw,80px)">
@@ -137,7 +138,7 @@
         G.toast(`Support cancelled. ${a.name} will understand — the door stays open.`);
       } else {
         pledges[a.id] = t;
-        const tierName = D.TIERS.find(x => x.id === t).name;
+        const tierName = D.tiersFor(a.id).find(x => x.id === t).name;
         G.toast(`Welcome to ${a.name}’s ${tierName} tier! (Demo — no payment taken.)`);
       }
       G.store.set('galera_pledges', pledges);

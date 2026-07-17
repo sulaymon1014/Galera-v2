@@ -16,7 +16,18 @@
       avatar: IMG + 'av1.jpg', cover: IMG + 'l04.jpg',
       followers: 843000, supporters: 12400, works: 0,
       statement: 'Painting light, one story at a time.',
-      bio: 'Digital painter and author of the long-running webcomic GhostBlade. Known for luminous rendering, jewelled detail and heroines who carry entire kingdoms in a single look. Shares full PSDs, brushes and hours-long process videos with supporters.'
+      bio: 'Digital painter and author of the long-running webcomic GhostBlade. Known for luminous rendering, jewelled detail and heroines who carry entire kingdoms in a single look. Shares full PSDs, brushes and hours-long process videos with supporters.',
+      tiers: [
+        { id: 'reader', name: 'Reader', price: 8, blurb: 'Follow the work up close.',
+          perks: ['Supporter-only feed & WIPs', 'HD wallpapers of every piece', 'GhostBlade pages a week early'] },
+        { id: 'apprentice', name: 'Apprentice', price: 18, featured: true, cta: 'Enter the studio',
+          blurb: 'Learn how the light is made.',
+          perks: ['Everything in Reader', '4K downloads + layered PSDs', 'Hours-long narrated process videos', 'My full brush set'] },
+        { id: 'circle', name: 'Ghostblade Circle', price: 35, blurb: 'Sit at the drawing table.',
+          perks: ['Everything in Apprentice', 'Monthly live paint-along', 'Vote on where the story goes', 'Your name in the credits'] },
+        { id: 'patron', name: 'Patron', price: 80, cta: 'Become a patron', blurb: 'For the deeply invested.',
+          perks: ['Everything in the Circle', 'A monthly personal art critique', 'First refusal on original sketches'] }
+      ]
     },
     {
       id: 'nocthene', name: 'Nocthene', origin: 'Shanghai / Berlin',
@@ -24,7 +35,16 @@
       avatar: IMG + 'av3.jpg', cover: IMG + 'l03.jpg',
       followers: 214000, supporters: 4120, works: 0,
       statement: 'I paint the concerts the future forgot to hold.',
-      bio: 'Concept artist turned illustrator, painting planets as stages and violins as spaceships. Every piece ships with a matching music playlist; supporters vote on which instrument the next heroine plays. Process videos are real-time with commentary.'
+      bio: 'Concept artist turned illustrator, painting planets as stages and violins as spaceships. Every piece ships with a matching music playlist; supporters vote on which instrument the next heroine plays. Process videos are real-time with commentary.',
+      tiers: [
+        { id: 'passenger', name: 'Passenger', price: 5, blurb: 'Come along for the ride.',
+          perks: ['Supporter-only feed & WIPs', 'HD downloads', 'The matching playlist for every piece'] },
+        { id: 'copilot', name: 'Co-pilot', price: 12, featured: true, cta: 'Take the controls',
+          blurb: 'Help steer the next scene.',
+          perks: ['Everything in Passenger', '4K downloads + layered PSDs', 'Real-time process videos with commentary', 'Vote on the next heroine’s instrument'] },
+        { id: 'composer', name: 'Composer', price: 25, blurb: 'Score the whole thing.',
+          perks: ['Everything in Co-pilot', 'Project files + music stems', 'Monthly livestream & Q&A', 'Your name in the credits'] }
+      ]
     },
     {
       id: 'aurelith', name: 'Aurelith', origin: 'Warsaw, Poland',
@@ -32,7 +52,16 @@
       avatar: IMG + 'av2.jpg', cover: IMG + 'l08.jpg',
       followers: 158000, supporters: 2860, works: 0,
       statement: 'Gold behaves badly in the dark. That is why I paint it.',
-      bio: 'Painter of crowns, relics and the people condemned to wear them. Renders metal the slow way — no photo textures, every reflection placed by hand. Supporters get layered PSDs, the custom gold-leaf brush set, and a monthly jewellery-rendering masterclass.'
+      bio: 'Painter of crowns, relics and the people condemned to wear them. Renders metal the slow way — no photo textures, every reflection placed by hand. Supporters get layered PSDs, the custom gold-leaf brush set, and a monthly jewellery-rendering masterclass.',
+      tiers: [
+        { id: 'courtier', name: 'Courtier', price: 6, blurb: 'Stand in the gilded hall.',
+          perks: ['Supporter-only feed & WIPs', 'HD downloads', 'Gilded work-in-progress shots'] },
+        { id: 'goldsmith', name: 'Goldsmith', price: 15, featured: true, cta: 'Learn the gold',
+          blurb: 'Render metal the slow way.',
+          perks: ['Everything in Courtier', '4K downloads + layered PSDs', 'My custom gold-leaf brush set', 'Monthly jewellery-rendering masterclass'] },
+        { id: 'regent', name: 'Regent', price: 30, blurb: 'Command the next relic.',
+          perks: ['Everything in Goldsmith', 'Monthly live critique', 'Vote on the next crown or relic', 'Your name in the credits'] }
+      ]
     },
     {
       id: 'selune', name: 'Selune', origin: 'Kyoto, Japan',
@@ -40,12 +69,22 @@
       avatar: IMG + 'av4.jpg', cover: IMG + 'l05.jpg',
       followers: 96000, supporters: 1540, works: 0,
       statement: 'Not every painting needs a battle. Some just need a window.',
-      bio: 'Illustrator of gentle scenes on the edge of the fantastic — swans in libraries, festivals seen from balconies, the last light on a city of spires. Posts a finished piece every other Friday and a sketchbook page every day, without exception, since 2022.'
+      bio: 'Illustrator of gentle scenes on the edge of the fantastic — swans in libraries, festivals seen from balconies, the last light on a city of spires. Posts a finished piece every other Friday and a sketchbook page every day, without exception, since 2022.',
+      tiers: [
+        { id: 'daydreamer', name: 'Daydreamer', price: 4, cta: 'Follow the sketchbook',
+          blurb: 'A quiet page every day.',
+          perks: ['The daily sketchbook feed', 'Supporter-only WIPs', 'HD downloads of every piece'] },
+        { id: 'lamplighter', name: 'Lamplighter', price: 10, featured: true, blurb: 'Light the whole city.',
+          perks: ['Everything in Daydreamer', '4K downloads + layered PSDs', 'Every-other-Friday process videos', 'A printed postcard mailed monthly + your name in the credits'] }
+      ]
     }
   ];
 
-  /* ------------------------------------------------ tiers (platform-wide) */
-  const TIERS = [
+  /* ------------------------------------------------ tier fallback
+     Each artist defines their own `tiers` (name, price, perks, button label,
+     which is highlighted, and how many) — see tiersFor() below. This template
+     is only a safety net for an artist who hasn't set tiers up yet. */
+  const DEFAULT_TIERS = [
     {
       id: 'sketchbook', name: 'Sketchbook', price: 5,
       blurb: 'For staying close to the work.',
@@ -180,7 +219,7 @@
       body: [
         'The first thing to understand about pricing on Galera: it is yours to set. The platform takes no cut of what you charge beyond the flat 8% that keeps the servers running — every tier price, every commission rate, every one-off is a number you choose. That freedom is also the hard part, because most artists price from fear rather than value.',
         'Start with your tiers, not your art. A healthy page usually has three: an entry tier around the price of a coffee that buys people into your process, a middle tier — where most of your income will live — that adds files, PSDs and process videos, and a top tier for the few who want your time directly. Price the middle tier at what a month of your best work is honestly worth to someone who loves it, then set the others on either side.',
-        'The math that matters is not per-person, it is per-thousand. A single five-dollar pledge is a tip; five dollars times two thousand people is a salary, and a salary is creative freedom. This is why undercharging hurts more than it helps — a tier priced too low needs an impossible crowd to become a living, and it quietly tells your best supporters their support means less than it does.',
+        'The math that matters is not per-person, it is per-thousand. A single small pledge is a tip; that same pledge times two thousand people is a salary, and a salary is creative freedom. This is why undercharging hurts more than it helps — a tier priced too low needs an impossible crowd to become a living, and it quietly tells your best supporters their support means less than it does.',
         'For commissions, price the hours, not the guess. Track how long a piece actually takes — sketch, revisions, render, the dead ends — and set an hourly floor you would not resent. Raise it every time your waitlist grows; a full queue is the clearest signal on earth that your price is too low.',
         'Last rule: never apologise for a number in public. State the price, list what it includes, and let it stand. The supporters you want are the ones who see the ninety hours behind the piece — and they would rather pay you fairly than watch you burn out for free.'
       ]
@@ -206,7 +245,7 @@
         'The first hundred supporters are the hardest and the most honest. They arrive one at a time, they know your work already, and they are answering a simple question: does this artist show up?',
         'Post on a schedule you can actually keep. Every other Friday, kept for a year, beats daily-for-three-weeks followed by silence. Consistency is the product; the art is what it delivers.',
         'Make the free feed generous. The finished piece, full-size, watermark-free — public. What supporters buy is not access to the image; it is proximity to the making: the WIPs, the files, the votes, the voice. Artists who paywall everything grow slower than artists who paywall the process.',
-        'And write your tier descriptions like a person. “$5 — you keep the lights on, you see everything early” outperforms three paragraphs of perk taxonomy. People do not subscribe to spreadsheets; they subscribe to you.'
+        'And write your tier descriptions like a person. “The entry tier — you keep the lights on, you see everything early” outperforms three paragraphs of perk taxonomy. People do not subscribe to spreadsheets; they subscribe to you.'
       ]
     },
     {
@@ -218,7 +257,7 @@
         'The economics of the feed are brutal and simple: an image earns its engagement in the first half-second. Everything past that — the hand-placed reflections, the composition that reads differently on the third look — is invisible to the algorithm and priceless to a person.',
         'Support platforms are a correction. They let a few thousand people say: paint the three-week painting anyway. Take the detour. Render the gold by hand. We are not the algorithm; we can wait.',
         'That patience shows up in the work. Compare a commission built for a client deadline with a supporter-funded personal piece and you can see the difference in the corners — the parts nobody demanded, done anyway.',
-        'So here is the quiet radical act available to anyone with five dollars: fund the slow version. The feed will still get its half-second. But you will know what the other three weeks look like, because you will have watched them happen.'
+        'So here is the quiet radical act available to anyone who can spare a little: fund the slow version. The feed will still get its half-second. But you will know what the other three weeks look like, because you will have watched them happen.'
       ]
     }
   ];
@@ -230,7 +269,7 @@
     { name: 'Priya S.', role: 'Supporter since 2025', text: 'Voting on the next piece is dangerously fun. We picked the clockwork violin. We were right.' },
     { name: 'Jonas W.', role: 'Creator, 800 supporters', text: 'I opened my page with 40 followers and shaking hands. The critique lounge and the creator guides here carried me to a living wage in fourteen months.' },
     { name: 'Camille R.', role: 'Atelier tier', text: 'My name is in the credits of a painting I watched being born on a Tuesday livestream. Try getting that feeling from a gallery.' },
-    { name: 'Aya M.', role: 'New supporter', text: 'Five dollars a month and the sketchbook feed alone is worth it — abandoned versions, honest notes, the works. It feels like being trusted.' }
+    { name: 'Aya M.', role: 'New supporter', text: 'A few dollars a month and the sketchbook feed alone is worth it — abandoned versions, honest notes, the works. It feels like being trusted.' }
   ];
 
   /* -------------------------------------------- forum threads */
@@ -302,13 +341,21 @@
   const byId = (arr) => Object.fromEntries(arr.map(x => [x.id, x]));
   const fmtCount = (n) => n >= 1000000 ? (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
     : n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+  const artistMap = byId(ARTISTS);
+
+  /* an artist's own tier set (name, price, perks, button label, highlight,
+     count — all creator-defined); falls back to the template if unset */
+  const tiersFor = (aid) => (artistMap[aid] && artistMap[aid].tiers) || DEFAULT_TIERS;
+  /* an artist's lowest price (what "support from" would show) */
+  const lowestPrice = (aid) => Math.min(...tiersFor(aid).map(t => t.price));
 
   window.GALERA = {
-    ARTISTS, ARTWORKS, TIERS, CATEGORIES, JOURNAL, REVIEWS, THREADS,
-    artistById: byId(ARTISTS),
+    ARTISTS, ARTWORKS, CATEGORIES, JOURNAL, REVIEWS, THREADS,
+    artistById: artistMap,
     artworkById: byId(ARTWORKS),
     articleById: byId(JOURNAL),
     worksByArtist: (aid) => ARTWORKS.filter(w => w.artist === aid),
+    tiersFor, lowestPrice,
     fmtCount
   };
 })();

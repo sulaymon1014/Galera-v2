@@ -14,10 +14,11 @@
   const favWorks = favs.map(id => D.artworkById[id]).filter(Boolean);
   const pledges = G.store.get('galera_pledges', {});
   const pledgeRows = Object.entries(pledges).map(([aid, tid]) => {
-    const a = D.artistById[aid], t = D.TIERS.find(x => x.id === tid);
+    const a = D.artistById[aid];
+    const t = a && D.tiersFor(aid).find(x => x.id === tid);   /* artist's own priced tier */
     return a && t ? { a, t } : null;
   }).filter(Boolean);
-  const monthly = pledgeRows.reduce((s, p) => s + p.t.price, 0);
+  const monthly = pledgeRows.reduce((s, p) => s + (p.t.price || 0), 0);
 
   $('#dashGrid').innerHTML = `
     <div class="dash-card reveal">
