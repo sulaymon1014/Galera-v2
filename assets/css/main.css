@@ -685,8 +685,15 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.25; }
 .form-card {
   max-width: 480px; margin: 0 auto; background: var(--bg-2);
   border: 1px solid var(--line-soft); padding: clamp(28px, 5vw, 52px);
-  display: grid; gap: 22px;
+  display: grid; gap: 22px; min-width: 0;
 }
+/* let every grid item inside the form shrink to the card width instead of
+   forcing it wider via min-content. The explicit minmax(0,1fr) column stops
+   auto tracks from sizing to the unwrapped error/hint text, which was
+   overflowing the card on phones. */
+.form-card > form, .form-card form > div, .field { min-width: 0; }
+.form-card form > div, .field { grid-template-columns: minmax(0, 1fr); }
+.field input, .field textarea, .field select { min-width: 0; max-width: 100%; }
 .field { display: grid; gap: 8px; }
 .field label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-dim); }
 .field input, .field textarea, .field select {
@@ -702,7 +709,8 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.25; }
 .check-row input { accent-color: var(--gold); margin-top: 4px; }
 .form-divider { display: flex; align-items: center; gap: 16px; color: var(--ink-faint); font-size: 0.72rem; letter-spacing: 0.24em; text-transform: uppercase; }
 .form-divider::before, .form-divider::after { content: ""; flex: 1; height: 1px; background: var(--line-soft); }
-.social-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.social-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.social-btn { min-width: 0; }
 .social-btn {
   border: 1px solid var(--line); padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;
   font-size: 0.82rem; color: var(--ink-dim); transition: all 0.3s;
@@ -715,8 +723,8 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.25; }
 .strength.s1 i { width: 22%; }
 .form-foot { text-align: center; font-size: 0.88rem; color: var(--ink-faint); }
 .form-foot a { color: var(--gold); }
-.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-soft); }
-.auth-tabs button { padding: 14px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-faint); transition: all 0.3s; }
+.auth-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--line-soft); }
+.auth-tabs button { min-width: 0; padding: 14px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink-faint); transition: all 0.3s; }
 .auth-tabs button.active { background: var(--gold); color: #171407; }
 
 /* ---------- account ---------- */
