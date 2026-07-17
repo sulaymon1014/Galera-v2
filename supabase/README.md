@@ -47,13 +47,42 @@ belong to the user who uploaded them — an upload *is* an artwork.
 | App concept | Table / bucket |
 |---|---|
 | Any user (and artist profile) | `profiles` (`is_artist` opt-in; auto-created on signup) |
-| Artworks (free uploads) | `artworks` (public read; `user_id` = creator) |
-| Artist membership tiers (optional premium) | `tiers` (per artist) |
-| Join an artist's tier | `memberships` (subscriber → artist → tier) |
-| Premium content flag | `artworks.is_premium` (gated by membership — seam for later) |
-| Saved works / likes | `favourites`, `artwork_likes` |
-| Forum | `threads`, `posts`, `post_likes` |
+| Follow an artist | `follows` (maintains `follower_count` / `following_count`) |
+| Artworks (free uploads) | `artworks` (uuid PK + `slug`; `user_id` = creator) |
+| Comments on artworks | `comments` (threaded via `parent_id`; maintains `comment_count`) |
+| Likes | `artwork_likes` / `post_likes` (maintain `like_count`) |
+| Artist membership tiers | `tiers` (`price_cents` + `currency`, per artist) |
+| Join an artist's tier | `memberships` (subscriber → artist → tier, `status`) |
+| Premium content | `artworks.is_premium` + `unlock_tier_id` seam |
+| Saved works | `favourites` |
+| Forum | `threads` (uuid + `slug`), `posts`, `post_likes` |
 | Uploaded image files | `artworks` storage bucket (`<uid>/<file>`) |
 
-**Designed-for-later (additive, no restructuring):** follows, limited
-editions, commissions, digital gifts, collectibles, Galera Premium.
+### Built for the long term (in the base schema now)
+- **UUID PKs + slugs** on every entity → future tables reference them freely.
+- **Money in minor units** (`price_cents` + `currency`); `memberships` carries
+  `provider` / `provider_ref` / `current_period_end` / `cancel_at` → Stripe/Paddle drop in.
+- **Denormalized counters** (`like_count`, `comment_count`, `view_count`,
+  `follower_count`) via triggers → O(1) reads; **every FK indexed**.
+- **Search**: `pg_trgm` trigram indexes on `profiles.name`/`handle`; a generated
+  `tsvector` + GIN on `artworks` (title + note + tags).
+- **Content lifecycle**: `status` (draft/scheduled/published) + `visibility`
+  (public/members/private) + `published_at` + `deleted_at` (soft delete).
+- **Identity/trust**: `role` (user/moderator/admin) + `is_staff()`, `is_verified`.
+- **Analytics**: `artwork_views` (with `ip_hash`) → trending / unique visitors /
+  creator stats; feeds `view_count` via trigger.
+- **Engagement/safety**: `notifications`, `follows`, `comments`, `blocks`,
+  `reports` (polymorphic), `audit_log` (staff-only).
+- **Storage**: `artworks` + `avatars` buckets, files under `<uid>/…` (per-user RLS).
+- **OAuth-ready**: the signup trigger reads `full_name`/`name`/`avatar_url`
+  from Google/Apple metadata.
+
+**Verified additive (build later, no restructuring — see the note at the
+bottom of `schema.sql`):** badge system, activity-events table, comment likes,
+orders/payments, collectibles / limited editions, commissions, gifts, and
+Galera Premium billing (`profiles.premium_until` already present).
+
+### Tables (16)
+`profiles`, `follows`, `artworks`, `artwork_views`, `comments`, `tiers`,
+`memberships`, `favourites`, `artwork_likes`, `threads`, `posts`, `post_likes`,
+`notifications`, `blocks`, `reports`, `audit_log`.
