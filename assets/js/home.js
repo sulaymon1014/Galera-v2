@@ -12,10 +12,27 @@
     const c = $('#commJoin'); c.textContent = 'Enter the forum'; c.href = 'community.html';
   }
 
-  /* ticker */
+  /* ticker — two identical groups; measure one so the loop translates by a
+     concrete pixel length (percentage transforms shimmer/shake on real phones) */
   const words = ['Character Art', 'Fantasy', 'Sci-Fi', 'Portraits', 'Scenery', 'Process Videos', 'Brushes & PSDs', 'Live Paint-Alongs'];
-  const seq = words.map(w => `<span>${w}</span>`).join('');
-  $('#tickerTrack').innerHTML = seq + seq;
+  const group = () => `<div class="ticker-group">${words.map(w => `<span>${w}</span>`).join('')}</div>`;
+  const track = $('#tickerTrack');
+  track.innerHTML = group() + group();
+  const sizeTicker = () => {
+    const g = track.querySelector('.ticker-group');
+    if (!g) return;
+    const w = g.getBoundingClientRect().width;   /* exact width of ONE group */
+    if (!w) return;
+    track.style.setProperty('--ticker-w', w + 'px');
+    track.style.setProperty('--ticker-dur', Math.max(18, Math.round(w / 55)) + 's'); /* ~constant speed */
+  };
+  requestAnimationFrame(sizeTicker);
+  window.addEventListener('load', sizeTicker);
+  /* the serif webfont changes the measured width — re-measure once it swaps in */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(sizeTicker));
+  setTimeout(sizeTicker, 900);   /* safety net if font-load timing is missed */
+  let tickerRT;
+  window.addEventListener('resize', () => { clearTimeout(tickerRT); tickerRT = setTimeout(sizeTicker, 200); });
 
   /* stats */
   const supporters = D.ARTISTS.reduce((s, a) => s + a.supporters, 0);

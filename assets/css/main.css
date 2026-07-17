@@ -257,14 +257,26 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.25; }
   overflow: hidden; padding: 18px 0; white-space: nowrap; user-select: none;
   background: var(--bg-2);
 }
-.ticker-track { display: flex; width: max-content; gap: 0; animation: ticker 46s linear infinite; will-change: transform; }
+.ticker-track {
+  display: flex; width: max-content;
+  animation: ticker var(--ticker-dur, 46s) linear infinite;
+  will-change: transform; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+.ticker-group { display: flex; flex: 0 0 auto; }
 @media (hover: hover) { .ticker:hover .ticker-track { animation-play-state: paused; } }
 .ticker span {
   font-family: var(--serif); font-size: clamp(1rem, 1.8vw, 1.35rem);
   color: var(--ink-dim); padding: 0 28px; display: inline-flex; align-items: center; gap: 56px;
 }
 .ticker span::after { content: "\25C7"; color: var(--gold); font-size: 0.7em; }
-@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* Animate a concrete pixel length (set from JS) rather than a percentage —
+   percentage transforms re-rasterize per frame on mobile and shimmer/shake.
+   Falls back to -50% if JS hasn't measured yet. */
+@keyframes ticker {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(calc(var(--ticker-w, 50%) * -1), 0, 0); }
+}
 
 /* ---------- artwork cards ---------- */
 .art-card { display: block; position: relative; break-inside: avoid; }
