@@ -139,11 +139,7 @@ create table if not exists public.artworks (
   view_count    int not null default 0,
   weeks         int not null default 0,
   sort          int not null default 0,
-  search        tsvector generated always as (
-                  to_tsvector('english',
-                    coalesce(title,'') || ' ' || coalesce(note,'') || ' ' ||
-                    coalesce(array_to_string(tags, ' '), ''))
-                ) stored,
+  search        tsvector,                          -- maintained by trigger (below)
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
   deleted_at    timestamptz
@@ -153,9 +149,21 @@ create index if not exists artworks_feed_idx     on public.artworks (status, vis
 create index if not exists artworks_category_idx on public.artworks (category);
 create index if not exists artworks_tags_idx     on public.artworks using gin (tags);
 create index if not exists artworks_search_idx   on public.artworks using gin (search);
+-- maintain the search vector (+ updated_at) on write. A trigger sidesteps the
+-- immutability rule that blocks to_tsvector() inside a generated column.
+create or replace function public.artworks_before_write()
+returns trigger language plpgsql as $$
+begin
+  new.search := to_tsvector('english',
+    coalesce(new.title,'') || ' ' || coalesce(new.note,'') || ' ' ||
+    coalesce(array_to_string(new.tags, ' '), ''));
+  if (tg_op = 'UPDATE') then new.updated_at := now(); end if;
+  return new;
+end; $$;
 drop trigger if exists trg_artworks_touch on public.artworks;
-create trigger trg_artworks_touch before update on public.artworks
-  for each row execute function public.touch_updated_at();
+drop trigger if exists trg_artworks_write on public.artworks;
+create trigger trg_artworks_write before insert or update on public.artworks
+  for each row execute function public.artworks_before_write();
 
 -- ============================================================
 --  artwork_views: raw view events -> trending / analytics / unique visitors
