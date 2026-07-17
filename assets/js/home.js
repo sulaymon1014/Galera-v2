@@ -7,9 +7,10 @@
   /* hero */
   $('#heroArt').innerHTML = `<img src="assets/img/art/hero.jpg" alt="">`;
 
-  /* member-aware CTA */
+  /* member-aware CTAs */
   if (G.Auth.member) {
     const c = $('#commJoin'); c.textContent = 'Enter the forum'; c.href = 'community.html';
+    const h = $('#heroJoin'); h.textContent = 'Meet the artists'; h.href = 'artists.html';
   }
 
   /* ticker — two identical groups; measure one so the loop translates by a
