@@ -85,7 +85,7 @@
         <p class="dim" style="font-size:.82rem; margin:6px 0 12px">Export or erase everything we hold about you — GDPR rights, honoured in one click.</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn btn-sm" id="exportData">Export my data</button>
-          <button class="btn btn-sm" id="deleteAccount" style="border-color:rgba(179,73,46,.5); color:#e08568">Delete account</button>
+          <button class="btn btn-sm" id="deleteAccount" style="border-color:rgba(224,104,126,.5); color:#e88596">Delete account</button>
         </div>
       </div>
     </div>`;
