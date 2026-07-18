@@ -45,37 +45,42 @@
     likes: new Set(),      // artwork uuids
     members: new Map(),    // artist uuid -> tier uuid
     postLikes: new Set(),  // post uuids
+    follows: new Set(),    // followee profile uuids
     loaded: false,
     async load() {
-      this.favs.clear(); this.likes.clear(); this.members.clear(); this.postLikes.clear();
+      this.favs.clear(); this.likes.clear(); this.members.clear(); this.postLikes.clear(); this.follows.clear();
       const id = uid();
       if (sb && id) {
-        const [f, l, m, pl] = await Promise.all([
+        const [f, l, m, pl, fo] = await Promise.all([
           sb.from('favourites').select('artwork_id').eq('user_id', id),
           sb.from('artwork_likes').select('artwork_id').eq('user_id', id),
           sb.from('memberships').select('artist_id,tier_id').eq('subscriber_id', id),
-          sb.from('post_likes').select('post_id').eq('user_id', id)
+          sb.from('post_likes').select('post_id').eq('user_id', id),
+          sb.from('follows').select('followee_id').eq('follower_id', id)
         ]);
         if (!f.error) f.data.forEach(r => this.favs.add(r.artwork_id));
         if (!l.error) l.data.forEach(r => this.likes.add(r.artwork_id));
         if (!m.error) m.data.forEach(r => this.members.set(r.artist_id, r.tier_id));
         if (!pl.error) pl.data.forEach(r => this.postLikes.add(r.post_id));
+        if (!fo.error) fo.data.forEach(r => this.follows.add(r.followee_id));
       }
       this.loaded = true;
     }
   };
 
-  /* toggle a membership-in-a-set table (favourites / artwork_likes / post_likes) */
-  async function toggleRow(set, table, keyCol, val) {
+  /* toggle a membership-in-a-set table (favourites / artwork_likes / post_likes /
+     follows). ownCol is the column holding the current user's id. */
+  async function toggleRow(set, table, keyCol, val, ownCol) {
+    ownCol = ownCol || 'user_id';
     const id = uid();
     if (!id) throw new Error('auth-required');
     const on = !set.has(val);
     if (on) {
-      const { error } = await sb.from(table).insert({ user_id: id, [keyCol]: val });
+      const { error } = await sb.from(table).insert({ [ownCol]: id, [keyCol]: val });
       if (error) throw error;
       set.add(val);
     } else {
-      const { error } = await sb.from(table).delete().eq('user_id', id).eq(keyCol, val);
+      const { error } = await sb.from(table).delete().eq(ownCol, id).eq(keyCol, val);
       if (error) throw error;
       set.delete(val);
     }
@@ -95,6 +100,11 @@
   const PostLikes = {
     has(id) { return Lib.postLikes.has(id); },
     toggle(id) { return toggleRow(Lib.postLikes, 'post_likes', 'post_id', id); }
+  };
+  const Follows = {
+    all() { return [...Lib.follows]; },
+    has(profileUid) { return Lib.follows.has(profileUid); },
+    toggle(profileUid) { return toggleRow(Lib.follows, 'follows', 'followee_id', profileUid, 'follower_id'); }
   };
   const Members = {
     all() { return [...Lib.members.entries()]; },        // [[artistUid, tierUid], ...]
@@ -391,5 +401,5 @@
     toast('Welcome to the letter. First edition arrives Sunday. (Demo — nothing was sent.)');
   });
 
-  window.Galera = { Auth, Lib, Favs, Likes, Members, PostLikes, toast, watchReveals, esc, store, displayName, sb };
+  window.Galera = { Auth, Lib, Favs, Likes, Members, PostLikes, Follows, toast, watchReveals, esc, store, displayName, sb };
 })();

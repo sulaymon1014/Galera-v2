@@ -17,7 +17,8 @@
         <div class="name">${esc(a.name)}</div>
         <div class="sub"><span>${esc(a.practice)}</span><span>${a.works} works</span></div>
         <div class="sub" style="margin-top:6px"><span>${D.fmtCount(a.followers)} followers</span><span>${D.fmtCount(a.supporters)} supporters</span></div>
-        <div class="support-from">${G.Members.has(a.uid) ? '♥ You support this artist' : 'Support Artist →'}</div>
+        <div class="support-from">${G.Members.has(a.uid) ? '♥ You support this artist'
+          : G.Follows.has(a.uid) ? '✓ Following — support them →' : 'Support Artist →'}</div>
       </a>`;
     const render = (q) => {
       q = (q || '').trim().toLowerCase();
@@ -56,6 +57,7 @@
 
     function render() {
       const tier = G.Members.tierFor(a.uid);
+      const following = G.Follows.has(a.uid);
       profile.innerHTML = `
         <div class="profile-cover reveal"><img src="${a.cover}" alt="Artwork by ${esc(a.name)}"></div>
         <div class="profile-head reveal">
@@ -66,6 +68,7 @@
           </div>
           <div class="cta">
             <a class="btn btn-sm" href="artists.html">← All artists</a>
+            <button class="btn btn-sm" id="followBtn" aria-pressed="${following}">${following ? '✓ Following' : '+ Follow'}</button>
             <a class="btn btn-sm ${tier ? '' : 'btn-solid'}" href="#tiers">${tier ? '♥ Supporting' : 'Become a supporter'}</a>
           </div>
         </div>
@@ -125,6 +128,22 @@
     render();
 
     profile.addEventListener('click', async (e) => {
+      if (e.target.closest('#followBtn')) {
+        if (!G.Auth.member) {
+          G.toast('Sign in to follow artists — membership is free.');
+          setTimeout(() => location.href = 'auth.html?mode=register', 900);
+          return;
+        }
+        try {
+          const on = await G.Follows.toggle(a.uid);
+          a.followers += on ? 1 : -1;      /* counter trigger did the same in the DB */
+          G.toast(on ? `Following ${a.name} — new work will find you.` : `Unfollowed ${a.name}.`);
+        } catch (err) { G.toast('Could not update your follow — try again.'); return; }
+        const y = window.scrollY;
+        render();
+        window.scrollTo(0, y);
+        return;
+      }
       const btn = e.target.closest('[data-tier]');
       if (!btn) return;
       if (!G.Auth.member) {

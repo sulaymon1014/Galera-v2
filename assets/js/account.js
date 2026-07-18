@@ -23,6 +23,7 @@
       return a && t ? { a, t } : null;
     }).filter(Boolean);
     const monthly = pledgeRows.reduce((s, p) => s + (p.t.price || 0), 0);
+    const followed = G.Follows.all().map(fid => D.ARTISTS.find(x => x.uid === fid)).filter(Boolean);
 
     $('#dashGrid').innerHTML = `
       ${G.Auth.recovery ? `
@@ -48,6 +49,21 @@
           </div>`).join('<hr class="hr">') : `
           <p class="dim" style="font-size:.88rem">You’re not supporting anyone yet. Pick one artist whose work you’d miss — depth beats breadth.</p>
           <a class="btn btn-sm btn-solid" href="artists.html">Find your artist</a>`}
+      </div>
+
+      <div class="dash-card reveal">
+        <h3 class="serif">Following <span class="gold" style="font-size:.85rem">${followed.length || ''}</span></h3>
+        ${followed.length ? followed.map(f => `
+          <div style="display:flex; align-items:center; gap:12px;">
+            <img src="${f.avatar}" alt="" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:1px solid var(--line);">
+            <div style="flex:1">
+              <strong style="font-size:.95rem">${esc(f.name)}</strong>
+              <p class="dim" style="font-size:.8rem">${esc(f.practice)}</p>
+            </div>
+            <a class="btn btn-sm" href="artist.html?a=${f.id}">View</a>
+          </div>`).join('<hr class="hr">') : `
+          <p class="dim" style="font-size:.88rem">You’re not following anyone yet. Follow an artist and their new work will find you.</p>
+          <a class="btn btn-sm btn-solid" href="artists.html">Browse artists</a>`}
       </div>
 
       <div class="dash-card reveal">
@@ -159,6 +175,7 @@
         favourites: favs,
         memberships: G.Members.all(),
         likes: G.Likes.all(),
+        follows: G.Follows.all(),
         consent: G.store.get('galera_consent', null)
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
