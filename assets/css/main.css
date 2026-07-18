@@ -500,6 +500,34 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.25; }
   .lightbox-art svg { max-height: 52vh; }
 }
 
+/* comments inside the artwork lightbox */
+.lb-comments { border-top: 1px solid var(--line-soft); padding-top: 18px; display: grid; gap: 14px; }
+.comment-list { display: grid; gap: 16px; }
+.comment { display: grid; grid-template-columns: 34px 1fr; gap: 12px; }
+.comment .avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex: none;
+  background: var(--surface-2); border: 1px solid var(--line);
+  display: grid; place-content: center; font-family: var(--serif); color: var(--gold); font-size: 0.85rem;
+}
+.comment .c-head { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+.comment .c-head strong { font-size: 0.85rem; }
+.comment .c-head time { font-size: 0.72rem; color: var(--ink-faint); }
+.comment .c-del {
+  margin-left: auto; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint); transition: color 0.25s;
+}
+.comment .c-del:hover { color: var(--red); }
+.comment .c-body { color: var(--ink-dim); font-size: 0.9rem; margin-top: 3px; overflow-wrap: anywhere; }
+.c-form { display: grid; gap: 10px; }
+.c-form textarea {
+  width: 100%; resize: vertical; min-height: 62px;
+  background: var(--surface); border: 1px solid var(--line); padding: 12px;
+  color: var(--ink); line-height: 1.55; font-size: 0.9rem;
+}
+.c-form textarea:focus { outline: none; border-color: var(--gold-dim); }
+.c-form-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.c-form-row .dim { font-size: 0.74rem; }
+
 /* ---------- split sections ---------- */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 5vw, 80px); align-items: center; }
 @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }

@@ -44,6 +44,13 @@
     setTimeout(() => location.href = 'auth.html?mode=register', 900);
     return false;
   };
+  const timeAgo = (iso) => {
+    const s = Math.max(1, (Date.now() - new Date(iso).getTime()) / 1000);
+    if (s < 60) return 'just now';
+    const m = Math.floor(s / 60); if (m < 60) return m + (m === 1 ? ' min ago' : ' min ago');
+    const h = Math.floor(m / 60); if (h < 24) return h + (h === 1 ? ' hour ago' : ' hours ago');
+    const d = Math.floor(h / 24); return d + (d === 1 ? ' day ago' : ' days ago');
+  };
 
   function matchesFacet(w, facet) {
     const s = sel[facet.key];
@@ -134,7 +141,7 @@
           </div>
           <div class="art-caption">
             <div><div class="t">${esc(w.title)}</div><div class="a">${esc(artist.name)}</div></div>
-            <div class="p">♥ ${D.fmtCount(w.likes)}</div>
+            <div class="p">♥ ${D.fmtCount(w.likes)}${w.comments ? ` · 💬 ${D.fmtCount(w.comments)}` : ''}</div>
           </div>
         </a>
       </article>`;
@@ -225,6 +232,13 @@
             ${related.map(x => `<button class="related-thumb" data-rel="${x.id}" aria-label="View ${esc(x.title)}"><img src="${x.img}" alt="" loading="lazy"></button>`).join('')}
           </div>
         </div>` : ''}
+        <div class="lb-comments" id="lbComments">
+          <span class="eyebrow" style="font-size:.62rem">Comments <span id="lbCommentCount"></span></span>
+          <div id="lbCommentList" class="comment-list">
+            <p class="dim" style="font-size:.85rem">Loading comments…</p>
+          </div>
+          <div id="lbComposeArea"></div>
+        </div>
       </div>`;
 
     lb.classList.add('open');
@@ -258,6 +272,88 @@
         .catch(() => G.toast(url));
     });
     $$('[data-rel]', lbCard).forEach(b => b.addEventListener('click', () => openLightbox(b.dataset.rel)));
+
+    loadComments(w);
+  }
+
+  /* ---------------- comments (per artwork, loaded when the lightbox opens) --- */
+  async function loadComments(w) {
+    const list = $('#lbCommentList');
+    const { data, error } = await G.sb.from('comments')
+      .select('id,user_id,body,created_at, author:profiles(name,avatar_url)')
+      .eq('artwork_id', w.uid).is('deleted_at', null).order('created_at', { ascending: true });
+    if (currentId !== w.id) return;                 // lightbox moved on before we resolved
+    if (error) { if (list) list.innerHTML = `<p class="dim" style="font-size:.85rem">Comments couldn’t load.</p>`; return; }
+    renderComments(w, data || []);
+  }
+
+  function commentHtml(c) {
+    const me = G.Auth.member;
+    const name = (c.author && c.author.name) || 'Member';
+    const mine = me && c.user_id === me.id;
+    return `
+      <div class="comment" data-comment="${c.id}">
+        <span class="avatar" aria-hidden="true">${esc(name.trim()[0].toUpperCase())}</span>
+        <div style="flex:1; min-width:0">
+          <div class="c-head">
+            <strong>${esc(name)}</strong>
+            <time class="dim">${timeAgo(c.created_at)}</time>
+            ${mine ? `<button class="c-del" data-del-comment="${c.id}" aria-label="Delete your comment">Delete</button>` : ''}
+          </div>
+          <p class="c-body">${esc(c.body)}</p>
+        </div>
+      </div>`;
+  }
+
+  function renderComments(w, comments) {
+    const list = $('#lbCommentList'), cnt = $('#lbCommentCount'), area = $('#lbComposeArea');
+    if (!list) return;
+    if (cnt) cnt.textContent = comments.length ? `(${comments.length})` : '';
+    list.innerHTML = comments.length
+      ? comments.map(commentHtml).join('')
+      : `<p class="dim" style="font-size:.85rem">No comments yet — be the first to say something kind or useful.</p>`;
+
+    if (area) {
+      area.innerHTML = G.Auth.member ? `
+        <form id="lbCommentForm" class="c-form">
+          <textarea id="lbCommentText" rows="2" placeholder="Add a thoughtful comment…" required></textarea>
+          <div class="c-form-row">
+            <span class="dim">Commenting as <strong>${esc(G.displayName(G.Auth.member))}</strong></span>
+            <button class="btn btn-sm btn-solid" type="submit">Post</button>
+          </div>
+        </form>`
+        : `<p class="dim" style="font-size:.85rem"><a class="gold" href="auth.html?mode=register">Sign in</a> to join the conversation.</p>`;
+      const form = $('#lbCommentForm', area);
+      if (form) form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = $('#lbCommentText', area).value.trim();
+        if (body.length < 2) { G.toast('A little more, perhaps.'); return; }
+        const btn = form.querySelector('button[type=submit]'); btn.disabled = true;
+        const { data, error } = await G.sb.from('comments')
+          .insert({ artwork_id: w.uid, user_id: G.Auth.member.id, body })
+          .select('id,user_id,body,created_at, author:profiles(name,avatar_url)').single();
+        btn.disabled = false;
+        if (error) { G.toast('Could not post your comment — try again.'); return; }
+        comments.push(data);
+        w.comments = comments.length;               // keep the grid badge in sync
+        renderComments(w, comments);
+        renderGrid();
+        G.toast('Comment posted.');
+      });
+    }
+
+    list.querySelectorAll('[data-del-comment]').forEach(b => b.addEventListener('click', async () => {
+      const cid = b.dataset.delComment;
+      b.disabled = true;
+      const { error } = await G.sb.from('comments').delete().eq('id', cid);
+      if (error) { b.disabled = false; G.toast('Could not delete — try again.'); return; }
+      const i = comments.findIndex(c => c.id === cid);
+      if (i !== -1) comments.splice(i, 1);
+      w.comments = comments.length;
+      renderComments(w, comments);
+      renderGrid();
+      G.toast('Comment deleted.');
+    }));
   }
 
   function closeLightbox() {
