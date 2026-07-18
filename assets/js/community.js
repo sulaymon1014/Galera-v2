@@ -3,7 +3,7 @@
   'use strict';
   const D = window.GALERA, G = window.Galera, esc = G.esc;
   const $ = (s, el) => (el || document).querySelector(s);
-  const member = G.Auth.member;
+  let member = null;   /* set once the Supabase session resolves */
   const body = $('#communityBody');
 
   /* member-added replies live in localStorage, keyed by thread id */
@@ -24,9 +24,10 @@
       </div>
     </div>`;
 
-  if (member) {
+  function renderBody() {
+   if (member) {
     /* ------------- member view ------------- */
-    $('#commTitle').innerHTML = `Welcome back,<br><span class="italic gold">${esc(member.name.split(' ')[0])}.</span>`;
+    $('#commTitle').innerHTML = `Welcome back,<br><span class="italic gold">${esc(G.displayName(member).split(' ')[0])}.</span>`;
     $('#commLede').textContent = 'The room is open. Six conversations are moving today — the weekly WIP thread is filling up, and the critique lounge has a lighting study that needs your eyes.';
     body.innerHTML = `
       <div class="section-head reveal">
@@ -87,6 +88,7 @@
             </figure>`).join('')}
         </div>
       </div>`;
+   }
   }
 
   /* ------------- thread overlay (members; guests get first 2) ------------- */
@@ -131,7 +133,7 @@
         <label class="eyebrow" style="font-size:.62rem" for="composeText">Add your voice</label>
         <textarea id="composeText" placeholder="Critique the work, never the person…" required></textarea>
         <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
-          <span class="dim" style="font-size:.78rem">Posting as <strong>${esc(member.name)}</strong> · stored only in this browser (demo)</span>
+          <span class="dim" style="font-size:.78rem">Posting as <strong>${esc(G.displayName(member))}</strong> · stored only in this browser (demo)</span>
           <button class="btn btn-solid btn-sm" type="submit">Post reply</button>
         </div>
       </form>` : `
@@ -148,7 +150,7 @@
       e.preventDefault();
       const txt = $('#composeText', card).value.trim();
       if (txt.length < 3) { G.toast('A little more, perhaps — three characters is a sneeze.'); return; }
-      const post = { author: member.name, when: 'Just now', text: txt };
+      const post = { author: G.displayName(member), when: 'Just now', text: txt };
       extraPosts[id] = (extraPosts[id] || []).concat(post);
       G.store.set('galera_posts', extraPosts);
       G.toast('Posted. The room heard you.');
@@ -182,5 +184,5 @@
     if (e.key === 'Enter' && e.target.matches('[data-thread]')) openThread(e.target.dataset.thread);
   });
 
-  G.watchReveals();
+  G.Auth.ready.then((u) => { member = u; renderBody(); G.watchReveals(); });
 })();

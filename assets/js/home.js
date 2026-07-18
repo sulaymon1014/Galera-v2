@@ -7,11 +7,12 @@
   /* hero */
   $('#heroArt').innerHTML = `<img src="assets/img/art/hero.jpg" alt="">`;
 
-  /* member-aware CTAs */
-  if (G.Auth.member) {
-    const c = $('#commJoin'); c.textContent = 'Enter the forum'; c.href = 'community.html';
-    const h = $('#heroJoin'); h.textContent = 'Meet the artists'; h.href = 'artists.html';
-  }
+  /* member-aware CTAs (resolve once the session is known) */
+  G.Auth.ready.then((u) => {
+    if (!u) return;
+    const c = $('#commJoin'); if (c) { c.textContent = 'Enter the forum'; c.href = 'community.html'; }
+    const h = $('#heroJoin'); if (h) { h.textContent = 'Meet the artists'; h.href = 'artists.html'; }
+  });
 
   /* ticker — two identical groups; measure one so the loop translates by a
      concrete pixel length (percentage transforms shimmer/shake on real phones) */

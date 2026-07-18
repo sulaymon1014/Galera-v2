@@ -14,11 +14,23 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { } },
     del(k) { try { localStorage.removeItem(k); } catch { } }
   };
-  const Auth = {
-    get member() { return store.get('galera_member', null); },
-    signIn(m) { store.set('galera_member', m); },
-    signOut() { store.del('galera_member'); }
+  /* auth — backed by the Supabase session. Auth.member stays a sync getter for
+     existing callers (null until the session is known); Auth.ready resolves once
+     it is, and pages can await it or listen for the 'galera:auth' event. */
+  const sb = window.sb;
+  const displayName = (u) => {
+    if (!u) return 'Member';
+    const m = u.user_metadata || {};
+    return m.full_name || m.name || (u.email ? u.email.split('@')[0] : 'Member');
   };
+  const Auth = {
+    user: null,
+    _resolve: null,
+    ready: null,
+    get member() { return this.user; },
+    async signOut() { if (sb) await sb.auth.signOut(); }
+  };
+  Auth.ready = new Promise((res) => { Auth._resolve = res; });
   const Favs = {
     all() { return store.get('galera_favs', []); },
     has(id) { return this.all().includes(id); },
@@ -33,7 +45,6 @@
 
   /* ------------------------------------------------ header */
   const page = document.body.dataset.page || '';
-  const member = Auth.member;
   const navItems = [
     ['gallery', 'gallery.html', 'Collection'],
     ['artists', 'artists.html', 'Artists'],
@@ -43,13 +54,20 @@
   const navLinks = navItems.map(([id, href, label]) =>
     `<a href="${href}" class="${page === id ? 'active' : ''}">${label}</a>`).join('');
 
-  const accountUI = member
+  const accountHTML = (u) => u
     ? `<a class="member-chip" href="account.html" aria-label="Your account">
-         <span class="avatar" aria-hidden="true">${esc((member.name || 'M')[0].toUpperCase())}</span>
-         <span class="hide-mobile">${esc((member.name || 'Member').split(' ')[0])}</span>
+         <span class="avatar" aria-hidden="true">${esc(displayName(u)[0].toUpperCase())}</span>
+         <span class="hide-mobile">${esc(displayName(u).split(' ')[0])}</span>
        </a>`
     : `<a class="btn btn-sm hide-mobile" href="auth.html">Sign in</a>
        <a class="btn btn-sm btn-solid hide-mobile" href="auth.html?mode=register">Join free</a>`;
+  const accountNavHTML = (u) => u
+    ? `<a href="account.html">Account <small>06</small></a>`
+    : `<a href="auth.html">Sign in / Join <small>06</small></a>`;
+  function renderAccount() {
+    const a = document.getElementById('acctArea'); if (a) a.innerHTML = accountHTML(Auth.user);
+    const n = document.getElementById('acctNavArea'); if (n) n.innerHTML = accountNavHTML(Auth.user);
+  }
 
   const header = document.createElement('header');
   header.className = 'site-header';
@@ -61,7 +79,7 @@
         <button class="icon-btn" id="searchOpen" aria-label="Search (Ctrl+K)" title="Search — Ctrl+K">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
         </button>
-        ${accountUI}
+        <span id="acctArea"></span>
         <button class="icon-btn nav-toggle" id="navOpen" aria-label="Open menu">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
         </button>
@@ -83,13 +101,29 @@
       <a href="index.html" class="${page === 'home' ? 'active' : ''}">Home <small>01</small></a>
       ${navItems.map(([id, href, label], i) =>
         `<a href="${href}" class="${page === id ? 'active' : ''}">${label} <small>0${i + 2}</small></a>`).join('')}
-      ${member
-        ? `<a href="account.html">Account <small>06</small></a>`
-        : `<a href="auth.html">Sign in / Join <small>06</small></a>`}
+      <span id="acctNavArea"></span>
     </nav>`;
   document.body.appendChild(mnav);
   $('#navOpen').addEventListener('click', () => { mnav.classList.add('open'); mnav.setAttribute('aria-hidden', 'false'); });
   $('.close-x', mnav).addEventListener('click', () => { mnav.classList.remove('open'); mnav.setAttribute('aria-hidden', 'true'); });
+
+  /* render logged-out immediately, then resolve the real session */
+  renderAccount();
+  (async function initAuth() {
+    if (!sb) { Auth._resolve(null); return; }
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      Auth.user = session ? session.user : null;
+    } catch (e) { console.error('[Galera] session error', e); Auth.user = null; }
+    renderAccount();
+    Auth._resolve(Auth.user);
+    document.dispatchEvent(new CustomEvent('galera:auth', { detail: Auth.user }));
+    sb.auth.onAuthStateChange((_evt, session) => {
+      Auth.user = session ? session.user : null;
+      renderAccount();
+      document.dispatchEvent(new CustomEvent('galera:auth', { detail: Auth.user }));
+    });
+  })();
 
   /* header: solidify past the fold; hide on scroll-down, reveal on scroll-up */
   let lastY = window.scrollY;
@@ -278,5 +312,5 @@
     toast('Welcome to the letter. First edition arrives Sunday. (Demo — nothing was sent.)');
   });
 
-  window.Galera = { Auth, Favs, toast, watchReveals, esc, store };
+  window.Galera = { Auth, Favs, toast, watchReveals, esc, store, displayName, sb };
 })();
