@@ -184,5 +184,5 @@
     if (e.key === 'Enter' && e.target.matches('[data-thread]')) openThread(e.target.dataset.thread);
   });
 
-  G.Auth.ready.then((u) => { member = u; renderBody(); G.watchReveals(); });
+  Promise.all([G.Auth.ready, window.GALERA.ready]).then(([u]) => { member = u; renderBody(); G.watchReveals(); });
 })();

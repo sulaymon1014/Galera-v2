@@ -36,6 +36,7 @@
   let tickerRT;
   window.addEventListener('resize', () => { clearTimeout(tickerRT); tickerRT = setTimeout(sizeTicker, 200); });
 
+  window.GALERA.ready.then(function () {
   /* stats */
   const supporters = D.ARTISTS.reduce((s, a) => s + a.supporters, 0);
   $('#statRow').innerHTML = `
@@ -90,4 +91,5 @@
     </figure>`).join('');
 
   G.watchReveals();
+  });
 })();

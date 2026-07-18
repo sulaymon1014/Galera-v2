@@ -9,6 +9,7 @@
   const $ = (s, el) => (el || document).querySelector(s);
   const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
 
+  window.GALERA.ready.then(function () {
   /* ---------------- facet model ---------------- */
   const FACETS = [
     {
@@ -354,4 +355,5 @@
   renderUploads();
   const deep = new URLSearchParams(location.search).get('art');
   if (deep && D.artworkById[deep]) setTimeout(() => openLightbox(deep, false), 250);
+  });
 })();

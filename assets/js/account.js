@@ -4,7 +4,7 @@
   const D = window.GALERA, G = window.Galera, esc = G.esc, sb = G.sb;
   const $ = (s) => document.querySelector(s);
 
-  G.Auth.ready.then((user) => {
+  Promise.all([G.Auth.ready, window.GALERA.ready]).then(([user]) => {
     if (!user) { location.replace('auth.html'); return; }
 
     const name0 = G.displayName(user);

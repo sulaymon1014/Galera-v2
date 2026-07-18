@@ -7,6 +7,7 @@
   /* pledges: { artistId: tierId } — demo, this browser only */
   const pledges = G.store.get('galera_pledges', {});
 
+  window.GALERA.ready.then(function () {
   /* ---------------- directory ---------------- */
   const grid = $('#artistGrid');
   if (grid) {
@@ -147,4 +148,5 @@
       window.scrollTo(0, y);
     });
   }
+  });
 })();
