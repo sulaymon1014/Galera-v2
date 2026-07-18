@@ -35,10 +35,16 @@ From **Project Settings → API**, send me:
 ⚠️ **Never** share or commit the **`service_role`** key — it bypasses RLS. It's
 only for server-side/admin tasks (like seeding), never in the browser.
 
-I'll drop the URL + anon key into `assets/js/supabase.js`, add the two script
-tags to each page, and convert the frontend from its `localStorage` demo to
-real Supabase — in verifiable stages (auth → catalog reads → pledges/likes/
-favourites → forum → uploads).
+The URL + anon key live in `assets/js/supabase.js` and the two script tags are
+on each page. The frontend has been converted from its `localStorage` demo to
+real Supabase across all stages, each verified end-to-end against the live DB:
+auth → catalog reads → memberships/likes/favourites → forum → uploads. Writes
+go through the anon client and are guarded by the RLS policies below.
+
+**Known gap (no payment MVP):** `profiles.member_count` is not yet maintained by
+a trigger, so an artist's "supporters" number does not move when a member joins
+or leaves a tier. Add a bump-trigger on `memberships` (mirroring
+`bump_follow_counts`) when you want that count to be live.
 
 ## Model (one account type)
 
