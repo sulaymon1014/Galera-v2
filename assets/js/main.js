@@ -31,15 +31,88 @@
     async signOut() { if (sb) await sb.auth.signOut(); }
   };
   Auth.ready = new Promise((res) => { Auth._resolve = res; });
+
+  /* ------------------------------------------------ per-user library (Supabase)
+     Favourites, likes, memberships and post-likes are the current user's own
+     rows, guarded by RLS (auth.uid() = user_id). We load them once when the
+     session resolves; the *.has() getters stay synchronous for renderers, while
+     toggles write to the DB and return a promise resolving to the new state. */
+  const uid = () => Auth.user && Auth.user.id;
+  const Lib = {
+    favs: new Set(),       // artwork uuids
+    likes: new Set(),      // artwork uuids
+    members: new Map(),    // artist uuid -> tier uuid
+    postLikes: new Set(),  // post uuids
+    loaded: false,
+    async load() {
+      this.favs.clear(); this.likes.clear(); this.members.clear(); this.postLikes.clear();
+      const id = uid();
+      if (sb && id) {
+        const [f, l, m, pl] = await Promise.all([
+          sb.from('favourites').select('artwork_id').eq('user_id', id),
+          sb.from('artwork_likes').select('artwork_id').eq('user_id', id),
+          sb.from('memberships').select('artist_id,tier_id').eq('subscriber_id', id),
+          sb.from('post_likes').select('post_id').eq('user_id', id)
+        ]);
+        if (!f.error) f.data.forEach(r => this.favs.add(r.artwork_id));
+        if (!l.error) l.data.forEach(r => this.likes.add(r.artwork_id));
+        if (!m.error) m.data.forEach(r => this.members.set(r.artist_id, r.tier_id));
+        if (!pl.error) pl.data.forEach(r => this.postLikes.add(r.post_id));
+      }
+      this.loaded = true;
+    }
+  };
+
+  /* toggle a membership-in-a-set table (favourites / artwork_likes / post_likes) */
+  async function toggleRow(set, table, keyCol, val) {
+    const id = uid();
+    if (!id) throw new Error('auth-required');
+    const on = !set.has(val);
+    if (on) {
+      const { error } = await sb.from(table).insert({ user_id: id, [keyCol]: val });
+      if (error) throw error;
+      set.add(val);
+    } else {
+      const { error } = await sb.from(table).delete().eq('user_id', id).eq(keyCol, val);
+      if (error) throw error;
+      set.delete(val);
+    }
+    return on;
+  }
+
   const Favs = {
-    all() { return store.get('galera_favs', []); },
-    has(id) { return this.all().includes(id); },
-    toggle(id) {
-      let f = this.all();
-      const on = f.includes(id);
-      f = on ? f.filter(x => x !== id) : f.concat(id);
-      store.set('galera_favs', f);
-      return !on;
+    all() { return [...Lib.favs]; },
+    has(id) { return Lib.favs.has(id); },
+    toggle(id) { return toggleRow(Lib.favs, 'favourites', 'artwork_id', id); }
+  };
+  const Likes = {
+    all() { return [...Lib.likes]; },
+    has(id) { return Lib.likes.has(id); },
+    toggle(id) { return toggleRow(Lib.likes, 'artwork_likes', 'artwork_id', id); }
+  };
+  const PostLikes = {
+    has(id) { return Lib.postLikes.has(id); },
+    toggle(id) { return toggleRow(Lib.postLikes, 'post_likes', 'post_id', id); }
+  };
+  const Members = {
+    all() { return [...Lib.members.entries()]; },        // [[artistUid, tierUid], ...]
+    has(artistUid) { return Lib.members.has(artistUid); },
+    tierFor(artistUid) { return Lib.members.get(artistUid); },
+    async join(artistUid, tierUid) {
+      const id = uid();
+      if (!id) throw new Error('auth-required');
+      const { error } = await sb.from('memberships')
+        .upsert({ subscriber_id: id, artist_id: artistUid, tier_id: tierUid, status: 'active' },
+                { onConflict: 'subscriber_id,artist_id' });
+      if (error) throw error;
+      Lib.members.set(artistUid, tierUid);
+    },
+    async leave(artistUid) {
+      const id = uid();
+      if (!id) throw new Error('auth-required');
+      const { error } = await sb.from('memberships').delete().eq('subscriber_id', id).eq('artist_id', artistUid);
+      if (error) throw error;
+      Lib.members.delete(artistUid);
     }
   };
 
@@ -115,11 +188,14 @@
       const { data: { session } } = await sb.auth.getSession();
       Auth.user = session ? session.user : null;
     } catch (e) { console.error('[Galera] session error', e); Auth.user = null; }
+    try { await Lib.load(); } catch (e) { console.error('[Galera] library load error', e); }
     renderAccount();
     Auth._resolve(Auth.user);
     document.dispatchEvent(new CustomEvent('galera:auth', { detail: Auth.user }));
-    sb.auth.onAuthStateChange((_evt, session) => {
+    let lastUid = uid();
+    sb.auth.onAuthStateChange(async (_evt, session) => {
       Auth.user = session ? session.user : null;
+      if (uid() !== lastUid) { lastUid = uid(); try { await Lib.load(); } catch (e) { console.error('[Galera] library reload error', e); } }
       renderAccount();
       document.dispatchEvent(new CustomEvent('galera:auth', { detail: Auth.user }));
     });
@@ -312,5 +388,5 @@
     toast('Welcome to the letter. First edition arrives Sunday. (Demo — nothing was sent.)');
   });
 
-  window.Galera = { Auth, Favs, toast, watchReveals, esc, store, displayName, sb };
+  window.Galera = { Auth, Lib, Favs, Likes, Members, PostLikes, toast, watchReveals, esc, store, displayName, sb };
 })();

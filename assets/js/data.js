@@ -100,17 +100,17 @@
   };
 
   /* live catalog state (empty until loaded) */
-  const state = { ARTISTS: [], ARTWORKS: [], THREADS: [], artistById: {}, artworkById: {} };
+  const state = { ARTISTS: [], ARTWORKS: [], THREADS: [], artistById: {}, artworkById: {}, artworkByUid: {} };
 
   async function load() {
     const sb = window.sb;
     if (!sb) throw new Error('Supabase client not loaded');
     const [pr, tr, wr, thr, po] = await Promise.all([
       sb.from('profiles').select('id,handle,name,tagline,avatar_url,cover_url,bio,statement,follower_count,member_count').eq('is_artist', true).order('follower_count', { ascending: false }),
-      sb.from('tiers').select('artist_id,tier_key,name,price_cents,blurb,perks,featured,cta,sort').order('sort'),
-      sb.from('artworks').select('slug,user_id,image_path,title,category,base_likes,like_count,weeks,is_premium,alt,note,sort').is('deleted_at', null).order('sort'),
+      sb.from('tiers').select('id,artist_id,tier_key,name,price_cents,blurb,perks,featured,cta,sort').order('sort'),
+      sb.from('artworks').select('id,slug,user_id,image_path,title,category,base_likes,like_count,weeks,is_premium,alt,note,sort').is('deleted_at', null).order('sort'),
       sb.from('threads').select('id,slug,section,title,author,pinned,preview,sort').order('sort'),
-      sb.from('posts').select('thread_id,author_name,body,created_at').is('deleted_at', null).order('created_at')
+      sb.from('posts').select('id,thread_id,user_id,author_name,body,created_at').is('deleted_at', null).order('created_at')
     ]);
     for (const r of [pr, tr, wr, thr, po]) if (r.error) throw r.error;
 
@@ -125,32 +125,37 @@
     });
     tr.data.forEach(t => {
       const a = byUid[t.artist_id]; if (!a) return;
-      a.tiers.push({ id: t.tier_key, name: t.name, price: Math.round(t.price_cents / 100), blurb: t.blurb, perks: t.perks || [], featured: t.featured, cta: t.cta });
+      a.tiers.push({ uid: t.id, id: t.tier_key, name: t.name, price: Math.round(t.price_cents / 100), blurb: t.blurb, perks: t.perks || [], featured: t.featured, cta: t.cta });
     });
 
+    /* The public collection is the artists' catalog. A member's own uploads are
+       artworks too, but by non-artist users — those surface in the uploader's
+       "Your uploads" strip (and, later, their profile), not the artist feed. So
+       keep only artworks whose author is a known artist here. */
     const ARTWORKS = wr.data.map(w => {
       const a = byUid[w.user_id];
       if (a) a.works++;
       return {
-        id: w.slug, artist: a ? a.id : null, img: w.image_path, title: w.title, cat: w.category,
+        uid: w.id, id: w.slug, artist: a ? a.id : null, img: w.image_path, title: w.title, cat: w.category,
         likes: (w.base_likes || 0) + (w.like_count || 0), weeks: w.weeks, premium: w.is_premium,
         alt: w.alt || '', note: w.note || '', ar: arOf(w.image_path)
       };
-    });
+    }).filter(w => w.artist);
     const ARTISTS = pr.data.map(p => byHandle[p.handle]);
 
     const postsByThread = {};
-    po.data.forEach(p => { (postsByThread[p.thread_id] = postsByThread[p.thread_id] || []).push({ author: p.author_name, when: relTime(p.created_at), text: p.body }); });
+    po.data.forEach(p => { (postsByThread[p.thread_id] = postsByThread[p.thread_id] || []).push({ id: p.id, uid: p.user_id, author: p.author_name, when: relTime(p.created_at), text: p.body }); });
     const THREADS = thr.data.map(t => {
       const posts = postsByThread[t.id] || [];
       return {
-        id: t.slug, section: t.section, title: t.title, author: t.author, pinned: t.pinned,
+        uid: t.id, id: t.slug, section: t.section, title: t.title, author: t.author, pinned: t.pinned,
         preview: t.preview, replies: posts.length, likes: 0, when: posts.length ? posts[0].when : 'recently', posts
       };
     });
 
     state.ARTISTS = ARTISTS; state.ARTWORKS = ARTWORKS; state.THREADS = THREADS;
     state.artistById = byHandle; state.artworkById = byId(ARTWORKS);
+    state.artworkByUid = Object.fromEntries(ARTWORKS.map(w => [w.uid, w]));
   }
 
   const ready = load().catch(e => { console.error('[Galera] catalog load failed:', (e && e.message) || e); });
@@ -162,6 +167,7 @@
     JOURNAL, REVIEWS, CATEGORIES,
     get artistById() { return state.artistById; },
     get artworkById() { return state.artworkById; },
+    get artworkByUid() { return state.artworkByUid; },
     articleById: byId(JOURNAL),
     tiersFor: (h) => (state.artistById[h] && state.artistById[h].tiers) || [],
     lowestPrice: (h) => { const t = (state.artistById[h] && state.artistById[h].tiers) || []; return t.length ? Math.min(...t.map(x => x.price)) : 0; },

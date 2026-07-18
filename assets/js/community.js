@@ -6,9 +6,8 @@
   let member = null;   /* set once the Supabase session resolves */
   const body = $('#communityBody');
 
-  /* member-added replies live in localStorage, keyed by thread id */
-  const extraPosts = G.store.get('galera_posts', {});
-  const likes = G.store.get('galera_likes', []);
+  /* forum replies + appreciations are Supabase-backed:
+     posts already loaded into D.THREADS[].posts; likes via G.PostLikes. */
 
   const threadRow = (t) => `
     <div class="thread" data-thread="${t.id}" role="button" tabindex="0" aria-label="Open thread: ${esc(t.title)}">
@@ -18,7 +17,7 @@
         <p class="prev">${esc(t.preview)}</p>
       </div>
       <div class="stats">
-        <span><strong>${t.replies + ((extraPosts[t.id] || []).length)}</strong> replies</span>
+        <span><strong>${t.posts.length}</strong> replies</span>
         <span><strong>${t.likes}</strong> appreciations</span>
         <span>${esc(t.author)} · ${esc(t.when)}</span>
       </div>
@@ -97,9 +96,8 @@
 
   function avatarOf(name) { return esc(name.trim()[0].toUpperCase()); }
 
-  function postHtml(p, tid, idx) {
-    const key = `${tid}:${idx}`;
-    const liked = likes.includes(key);
+  function postHtml(p) {
+    const liked = p.id ? G.PostLikes.has(p.id) : false;
     return `
       <div class="post">
         <span class="avatar" aria-hidden="true">${avatarOf(p.author)}</span>
@@ -107,7 +105,7 @@
           <div class="head"><strong>${esc(p.author)}</strong><time>${esc(p.when)}</time></div>
           <p class="body">${esc(p.text)}</p>
           <div class="post-actions">
-            <button data-like="${key}" class="${liked ? 'on' : ''}">${liked ? '♥ Appreciated' : '♡ Appreciate'}</button>
+            <button data-like="${p.id || ''}" class="${liked ? 'on' : ''}">${liked ? '♥ Appreciated' : '♡ Appreciate'}</button>
             <button data-report>⚑ Report</button>
           </div>
         </div>
@@ -120,20 +118,18 @@
     const guestAllowed = D.THREADS.slice(0, 2).some(x => x.id === id);
     if (!member && !guestAllowed) { location.href = 'auth.html?mode=register'; return; }
 
-    const mine = extraPosts[id] || [];
     card.innerHTML = `
       <span class="eyebrow">${esc(t.section)}</span>
       <h2 class="serif" style="font-size:clamp(1.5rem,2.8vw,2.2rem)">${esc(t.title)}</h2>
       <div>
-        ${t.posts.map((p, i) => postHtml(p, id, i)).join('')}
-        ${mine.map((p, i) => postHtml(p, id, t.posts.length + i)).join('')}
+        ${t.posts.map(postHtml).join('')}
       </div>
       ${member ? `
       <form class="composer" id="composer">
         <label class="eyebrow" style="font-size:.62rem" for="composeText">Add your voice</label>
         <textarea id="composeText" placeholder="Critique the work, never the person…" required></textarea>
         <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
-          <span class="dim" style="font-size:.78rem">Posting as <strong>${esc(G.displayName(member))}</strong> · stored only in this browser (demo)</span>
+          <span class="dim" style="font-size:.78rem">Posting as <strong>${esc(G.displayName(member))}</strong></span>
           <button class="btn btn-solid btn-sm" type="submit">Post reply</button>
         </div>
       </form>` : `
@@ -146,13 +142,18 @@
     overlay.querySelector('.reader-panel').scrollTop = 0;
 
     const form = $('#composer', card);
-    if (form) form.addEventListener('submit', (e) => {
+    if (form) form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const txt = $('#composeText', card).value.trim();
       if (txt.length < 3) { G.toast('A little more, perhaps — three characters is a sneeze.'); return; }
-      const post = { author: G.displayName(member), when: 'Just now', text: txt };
-      extraPosts[id] = (extraPosts[id] || []).concat(post);
-      G.store.set('galera_posts', extraPosts);
+      const author = G.displayName(member);
+      const btn = form.querySelector('button[type=submit]'); if (btn) btn.disabled = true;
+      const { data, error } = await G.sb.from('posts')
+        .insert({ thread_id: t.uid, user_id: member.id, author_name: author, body: txt })
+        .select('id,created_at').single();
+      if (btn) btn.disabled = false;
+      if (error) { G.toast('Could not post your reply — try again.'); return; }
+      t.posts.push({ id: data.id, uid: member.id, author, when: 'Just now', text: txt });
       G.toast('Posted. The room heard you.');
       openThread(id);
     });
@@ -160,19 +161,20 @@
 
   function closeThread() { overlay.classList.remove('open'); document.body.style.overflow = ''; }
 
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', async (e) => {
     const row = e.target.closest('[data-thread]');
     if (row && !row.closest('.veiled')) { openThread(row.dataset.thread); return; }
     if (e.target.hasAttribute('data-t-close') && !e.target.closest('.reader-card')) { closeThread(); return; }
     const like = e.target.closest('[data-like]');
     if (like) {
       if (!member) { G.toast('Members appreciate; guests admire. Join us — it’s free.'); return; }
-      const key = like.dataset.like;
-      const i = likes.indexOf(key);
-      i === -1 ? likes.push(key) : likes.splice(i, 1);
-      G.store.set('galera_likes', likes);
-      like.classList.toggle('on', i === -1);
-      like.textContent = i === -1 ? '♥ Appreciated' : '♡ Appreciate';
+      const postUid = like.dataset.like;
+      if (!postUid) return;
+      try {
+        const on = await G.PostLikes.toggle(postUid);
+        like.classList.toggle('on', on);
+        like.textContent = on ? '♥ Appreciated' : '♡ Appreciate';
+      } catch (err) { G.toast('Could not update your appreciation — try again.'); }
       return;
     }
     if (e.target.closest('[data-report]')) {

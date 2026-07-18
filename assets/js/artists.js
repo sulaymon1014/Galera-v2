@@ -4,10 +4,9 @@
   const D = window.GALERA, G = window.Galera, esc = G.esc;
   const $ = (s, el) => (el || document).querySelector(s);
 
-  /* pledges: { artistId: tierId } — demo, this browser only */
-  const pledges = G.store.get('galera_pledges', {});
+  /* memberships live in G.Members (Supabase, keyed by artist uuid -> tier uuid) */
 
-  window.GALERA.ready.then(function () {
+  Promise.all([window.GALERA.ready, G.Auth.ready]).then(function () {
   /* ---------------- directory ---------------- */
   const grid = $('#artistGrid');
   if (grid) {
@@ -18,7 +17,7 @@
         <div class="name">${esc(a.name)}</div>
         <div class="sub"><span>${esc(a.practice)}</span><span>${a.works} works</span></div>
         <div class="sub" style="margin-top:6px"><span>${D.fmtCount(a.followers)} followers</span><span>${D.fmtCount(a.supporters)} supporters</span></div>
-        <div class="support-from">${pledges[a.id] ? '♥ You support this artist' : 'Support Artist →'}</div>
+        <div class="support-from">${G.Members.has(a.uid) ? '♥ You support this artist' : 'Support Artist →'}</div>
       </a>`;
     const render = (q) => {
       q = (q || '').trim().toLowerCase();
@@ -41,7 +40,7 @@
     const works = D.worksByArtist(a.id);
 
     function tierCard(t) {
-      const active = pledges[a.id] === t.id;
+      const active = G.Members.tierFor(a.uid) === t.uid;
       return `
         <div class="tier-card ${t.featured ? 'featured' : ''}">
           ${t.featured ? `<span class="tier-tag">${esc(t.badge || 'Most popular')}</span>` : ''}
@@ -49,14 +48,14 @@
           <div class="tier-price">$${t.price}<small> /month</small></div>
           <p class="dim" style="font-size:.88rem">${esc(t.blurb)}</p>
           <ul>${t.perks.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
-          <button class="btn ${active ? '' : 'btn-solid'} btn-wide" data-tier="${t.id}">
+          <button class="btn ${active ? '' : 'btn-solid'} btn-wide" data-tier="${t.uid}">
             ${active ? '♥ Supporting — cancel' : esc(t.cta || 'Join ' + t.name)}
           </button>
         </div>`;
     }
 
     function render() {
-      const tier = pledges[a.id];
+      const tier = G.Members.tierFor(a.uid);
       profile.innerHTML = `
         <div class="profile-cover reveal"><img src="${a.cover}" alt="Artwork by ${esc(a.name)}"></div>
         <div class="profile-head reveal">
@@ -125,7 +124,7 @@
     }
     render();
 
-    profile.addEventListener('click', (e) => {
+    profile.addEventListener('click', async (e) => {
       const btn = e.target.closest('[data-tier]');
       if (!btn) return;
       if (!G.Auth.member) {
@@ -133,16 +132,17 @@
         setTimeout(() => location.href = 'auth.html?mode=register', 900);
         return;
       }
-      const t = btn.dataset.tier;
-      if (pledges[a.id] === t) {
-        delete pledges[a.id];
-        G.toast(`Support cancelled. ${a.name} will understand — the door stays open.`);
-      } else {
-        pledges[a.id] = t;
-        const tierName = D.tiersFor(a.id).find(x => x.id === t).name;
-        G.toast(`Welcome to ${a.name}’s ${tierName} tier! (Demo — no payment taken.)`);
-      }
-      G.store.set('galera_pledges', pledges);
+      const tierUid = btn.dataset.tier;
+      try {
+        if (G.Members.tierFor(a.uid) === tierUid) {
+          await G.Members.leave(a.uid);
+          G.toast(`Support cancelled. ${a.name} will understand — the door stays open.`);
+        } else {
+          await G.Members.join(a.uid, tierUid);
+          const tierName = D.tiersFor(a.id).find(x => x.uid === tierUid).name;
+          G.toast(`Welcome to ${a.name}’s ${tierName} tier! (Demo — no payment taken.)`);
+        }
+      } catch (err) { G.toast('Could not update your membership — try again.'); return; }
       const y = window.scrollY;
       render();
       window.scrollTo(0, y);

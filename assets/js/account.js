@@ -16,11 +16,10 @@
     $('#accSub').textContent = `Member since ${since0} · ${esc(email0)}`;
 
     const favs = G.Favs.all();
-    const favWorks = favs.map(id => D.artworkById[id]).filter(Boolean);
-    const pledges = G.store.get('galera_pledges', {});
-    const pledgeRows = Object.entries(pledges).map(([aid, tid]) => {
-      const a = D.artistById[aid];
-      const t = a && D.tiersFor(aid).find(x => x.id === tid);
+    const favWorks = favs.map(id => D.artworkByUid[id]).filter(Boolean);
+    const pledgeRows = G.Members.all().map(([artistUid, tierUid]) => {
+      const a = D.ARTISTS.find(x => x.uid === artistUid);
+      const t = a && a.tiers.find(x => x.uid === tierUid);
       return a && t ? { a, t } : null;
     }).filter(Boolean);
     const monthly = pledgeRows.reduce((s, p) => s + (p.t.price || 0), 0);
@@ -133,9 +132,9 @@
     $('#exportData').addEventListener('click', () => {
       const data = {
         account: { name: name0, email: email0, id: user.id },
-        favourites: favs, memberships: pledges,
-        likes: G.store.get('galera_art_likes', []),
-        posts: G.store.get('galera_posts', {}),
+        favourites: favs,
+        memberships: G.Members.all(),
+        likes: G.Likes.all(),
         consent: G.store.get('galera_consent', null)
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
