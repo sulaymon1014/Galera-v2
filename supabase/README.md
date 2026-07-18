@@ -15,8 +15,10 @@ Run **in this order**:
 
 ## 2. Configure Auth (Supabase → Authentication)
 
-- **Providers → Email**: enable. For local testing you can turn *"Confirm email"*
-  **off** so sign-ups log in immediately; turn it back on for production.
+- **Providers → Email**: enable. *"Confirm email"* is currently **off**, so
+  sign-ups log in immediately (no verification step) — verified end-to-end.
+  Turn it back **on** for production; the register flow already handles both
+  cases (`assets/js/auth.js` branches on whether `signUp` returns a session).
 - **Providers → Google / Apple** (optional): enable and paste their OAuth
   credentials if you want the social buttons live.
 - **URL Configuration → Site URL / Redirect URLs**: add your local dev origin
