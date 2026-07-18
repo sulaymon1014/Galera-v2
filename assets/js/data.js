@@ -8,6 +8,8 @@
   'use strict';
 
   const IMG = 'assets/img/art/';
+  const IMG_PLACEHOLDER_AVATAR = 'assets/img/placeholder-avatar.svg';
+  const IMG_PLACEHOLDER_COVER = 'assets/img/placeholder-cover.svg';
 
   /* pixel dimensions of the bundled seed files — lets frames reserve the right
      aspect ratio before the image loads (and sizes the filmstrip rows) */
@@ -118,7 +120,8 @@
     pr.data.forEach(p => {
       const a = {
         id: p.handle, uid: p.id, name: p.name, origin: '', practice: p.tagline || '',
-        avatar: p.avatar_url, cover: p.cover_url, followers: p.follower_count, supporters: p.member_count,
+        avatar: p.avatar_url || IMG_PLACEHOLDER_AVATAR, cover: p.cover_url || IMG_PLACEHOLDER_COVER,
+        followers: p.follower_count, supporters: p.member_count,
         statement: p.statement || '', bio: p.bio || '', tiers: [], works: 0
       };
       byHandle[p.handle] = a; byUid[p.id] = a;

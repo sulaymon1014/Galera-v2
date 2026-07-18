@@ -97,7 +97,9 @@
             </div>
           </div>
           <p class="dim reveal" style="font-size:.9rem; margin-bottom:22px">${esc(a.name)} designs these tiers — names, perks and prices are all theirs. Every artist on Galera builds their own.</p>
-          <div class="tier-grid reveal" data-delay="1">${D.tiersFor(a.id).map(tierCard).join('')}</div>
+          ${D.tiersFor(a.id).length
+            ? `<div class="tier-grid reveal" data-delay="1">${D.tiersFor(a.id).map(tierCard).join('')}</div>`
+            : `<p class="dim reveal" data-delay="1" style="font-size:.92rem">${esc(a.name)} hasn’t opened support tiers yet — follow along and check back soon.</p>`}
         </div>
 
         <div style="margin-top:clamp(48px,7vw,80px)">

@@ -4,13 +4,21 @@
   const D = window.GALERA, G = window.Galera, esc = G.esc, sb = G.sb;
   const $ = (s) => document.querySelector(s);
 
-  Promise.all([G.Auth.ready, window.GALERA.ready]).then(([user]) => {
+  Promise.all([G.Auth.ready, window.GALERA.ready]).then(async ([user]) => {
     if (!user) { location.replace('auth.html'); return; }
 
     const name0 = G.displayName(user);
     const email0 = user.email || '';
     const since0 = user.created_at ? new Date(user.created_at).getFullYear() : new Date().getFullYear();
     const prefs = G.store.get('galera_profile', {}) || {};
+
+    /* artist state: the profile row + this user's tiers (empty for non-artists) */
+    const [profRes, tiersRes] = await Promise.all([
+      sb.from('profiles').select('is_artist,handle,tagline,bio,statement,avatar_url,cover_url').eq('id', user.id).single(),
+      sb.from('tiers').select('id,tier_key,name,price_cents,blurb,perks,featured,sort').eq('artist_id', user.id).order('sort')
+    ]);
+    const prof = profRes.data || {};
+    const myTiers = tiersRes.data || [];
 
     $('#accTitle').innerHTML = `Hello, <span class="italic gold">${esc(name0.split(' ')[0])}.</span>`;
     $('#accSub').textContent = `Member since ${since0} · ${esc(email0)}`;
@@ -25,7 +33,70 @@
     const monthly = pledgeRows.reduce((s, p) => s + (p.t.price || 0), 0);
     const followed = G.Follows.all().map(fid => D.ARTISTS.find(x => x.uid === fid)).filter(Boolean);
 
+    const artistCardHtml = () => prof.is_artist ? `
+      <div class="dash-card reveal" id="artistCard" style="grid-column:1/-1">
+        <h3 class="serif">Artist studio <span class="gold" style="font-size:.8rem">@${esc(prof.handle || '')}</span></h3>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <a class="btn btn-sm btn-solid" href="artist.html?a=${esc(prof.handle || '')}">View my public page</a>
+          <a class="btn btn-sm" href="gallery.html">Upload work</a>
+        </div>
+        <hr class="hr">
+        <div style="display:grid; gap:14px;">
+          <span class="eyebrow" style="font-size:.62rem">Your artist profile</span>
+          <div class="field"><label for="arTagline">Tagline</label>
+            <input id="arTagline" type="text" maxlength="80" value="${esc(prof.tagline || '')}" placeholder="e.g. Painted light & long stories"></div>
+          <div class="field"><label for="arBio">Bio</label>
+            <textarea id="arBio" rows="3" placeholder="A sentence or two about you and your work.">${esc(prof.bio || '')}</textarea></div>
+          <div class="field"><label for="arStatement">Statement</label>
+            <textarea id="arStatement" rows="2" placeholder="A short line pulled out as a quote on your page.">${esc(prof.statement || '')}</textarea></div>
+          <div style="display:flex; flex-wrap:wrap; gap:16px;">
+            <div class="field" style="flex:1; min-width:160px"><label for="arAvatar">Replace avatar (optional)</label><input id="arAvatar" type="file" accept="image/*"></div>
+            <div class="field" style="flex:1; min-width:160px"><label for="arCover">Replace cover (optional)</label><input id="arCover" type="file" accept="image/*"></div>
+          </div>
+          <button class="btn btn-sm btn-solid" id="arSave" style="justify-self:start">Save artist profile</button>
+        </div>
+        <hr class="hr">
+        <div style="display:grid; gap:14px;">
+          <span class="eyebrow" style="font-size:.62rem">Support tiers</span>
+          <div id="tierList" style="display:grid; gap:10px;"></div>
+          <details>
+            <summary style="cursor:pointer; color:var(--gold); font-size:.85rem">+ Add a tier</summary>
+            <div style="display:grid; gap:12px; margin-top:14px;">
+              <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <div class="field" style="flex:2; min-width:160px"><label for="tName">Name</label><input id="tName" type="text" maxlength="40" placeholder="e.g. Studio"></div>
+                <div class="field" style="flex:1; min-width:100px"><label for="tPrice">Price $/mo</label><input id="tPrice" type="number" min="1" max="999" placeholder="8"></div>
+              </div>
+              <div class="field"><label for="tBlurb">Blurb</label><input id="tBlurb" type="text" maxlength="120" placeholder="What this tier is about."></div>
+              <div class="field"><label for="tPerks">Perks (one per line)</label><textarea id="tPerks" rows="3" placeholder="4K downloads&#10;Layered PSDs&#10;Monthly process video"></textarea></div>
+              <button class="btn btn-sm btn-solid" id="tAdd" style="justify-self:start">Add tier</button>
+            </div>
+          </details>
+        </div>
+      </div>` : `
+      <div class="dash-card reveal" id="artistCard" style="grid-column:1/-1; border-color:var(--gold-dim)">
+        <h3 class="serif">Become an artist</h3>
+        <p class="dim" style="font-size:.9rem">Open your own page, upload your work, and let people support you. Any member can — it's free, and you keep 92% of every pledge.</p>
+        <button class="btn btn-sm btn-solid" id="beArtistBtn">Set up my artist page</button>
+        <div id="beArtistForm" hidden style="display:grid; gap:14px; margin-top:16px;">
+          <div class="field"><label for="baHandle">Handle (your page address)</label>
+            <input id="baHandle" type="text" maxlength="30" placeholder="e.g. ada-lovelace" autocomplete="off">
+            <span class="hint" id="baHandleHint">Lowercase letters, numbers and dashes. This becomes artist.html?a=…</span></div>
+          <div class="field"><label for="baTagline">Tagline</label>
+            <input id="baTagline" type="text" maxlength="80" placeholder="e.g. Painted light & long stories"></div>
+          <div class="field"><label for="baBio">Bio</label>
+            <textarea id="baBio" rows="3" placeholder="A sentence or two about you and your work."></textarea></div>
+          <div class="field"><label for="baStatement">Statement (optional)</label>
+            <textarea id="baStatement" rows="2" placeholder="A short line pulled out as a quote on your page."></textarea></div>
+          <div style="display:flex; flex-wrap:wrap; gap:16px;">
+            <div class="field" style="flex:1; min-width:160px"><label for="baAvatar">Avatar (optional)</label><input id="baAvatar" type="file" accept="image/*"></div>
+            <div class="field" style="flex:1; min-width:160px"><label for="baCover">Cover (optional)</label><input id="baCover" type="file" accept="image/*"></div>
+          </div>
+          <button class="btn btn-sm btn-solid" id="baSubmit" style="justify-self:start">Publish my artist page</button>
+        </div>
+      </div>`;
+
     $('#dashGrid').innerHTML = `
+      ${artistCardHtml()}
       ${G.Auth.recovery ? `
       <div class="dash-card reveal" style="border-color:var(--gold)">
         <h3 class="serif">Set a new password</h3>
@@ -137,6 +208,121 @@
           <div class="p">♥ ${D.fmtCount(w.likes)}</div>
         </div>
       </a>`).join('');
+
+    /* ---------------- artist onboarding + studio ---------------- */
+    const slugHandle = (s) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
+
+    function resizeToBlob(file, max) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, max / Math.max(img.width, img.height));
+          const cv = document.createElement('canvas');
+          cv.width = Math.round(img.width * scale); cv.height = Math.round(img.height * scale);
+          cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+          URL.revokeObjectURL(img.src);
+          cv.toBlob(b => b ? resolve(b) : reject(new Error('Could not process that image.')), 'image/jpeg', 0.85);
+        };
+        img.onerror = () => reject(new Error('That file does not look like an image.'));
+        img.src = URL.createObjectURL(file);
+      });
+    }
+    async function uploadImage(file, kind, max) {
+      const blob = await resizeToBlob(file, max);
+      const path = `${user.id}/${kind}-${Date.now()}.jpg`;
+      const up = await sb.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg' });
+      if (up.error) throw up.error;
+      return sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+    }
+
+    /* become an artist */
+    const beBtn = $('#beArtistBtn');
+    if (beBtn) {
+      beBtn.addEventListener('click', () => { $('#beArtistForm').hidden = false; beBtn.hidden = true; $('#baHandle').focus(); });
+      $('#baHandle').addEventListener('input', (e) => { const c = slugHandle(e.target.value); if (e.target.value !== c) e.target.value = c; });
+      $('#baSubmit').addEventListener('click', async () => {
+        const handle = slugHandle($('#baHandle').value);
+        const tagline = $('#baTagline').value.trim();
+        const bio = $('#baBio').value.trim();
+        const statement = $('#baStatement').value.trim();
+        if (handle.length < 3) { G.toast('Pick a handle of at least 3 characters.'); return; }
+        if (tagline.length < 2) { G.toast('Add a short tagline.'); return; }
+        const btn = $('#baSubmit'); btn.disabled = true;
+        try {
+          const taken = await sb.from('profiles').select('id').eq('handle', handle).neq('id', user.id);
+          if (taken.data && taken.data.length) { G.toast('That handle is taken — try another.'); btn.disabled = false; return; }
+          const patch = { is_artist: true, handle, tagline, bio, statement };
+          const av = $('#baAvatar').files[0], cv = $('#baCover').files[0];
+          if (av) patch.avatar_url = await uploadImage(av, 'avatar', 512);
+          if (cv) patch.cover_url = await uploadImage(cv, 'cover', 1600);
+          const { error } = await sb.from('profiles').update(patch).eq('id', user.id);
+          if (error) throw error;
+          G.toast('Welcome — your artist page is live.');
+          setTimeout(() => location.href = 'artist.html?a=' + handle, 900);
+        } catch (err) { btn.disabled = false; G.toast((err && err.message) || 'Could not set up your page — try again.'); }
+      });
+    }
+
+    /* artist studio: save profile */
+    const arSave = $('#arSave');
+    if (arSave) arSave.addEventListener('click', async () => {
+      arSave.disabled = true;
+      try {
+        const patch = { tagline: $('#arTagline').value.trim(), bio: $('#arBio').value.trim(), statement: $('#arStatement').value.trim() };
+        const av = $('#arAvatar').files[0], cv = $('#arCover').files[0];
+        if (av) patch.avatar_url = await uploadImage(av, 'avatar', 512);
+        if (cv) patch.cover_url = await uploadImage(cv, 'cover', 1600);
+        const { error } = await sb.from('profiles').update(patch).eq('id', user.id);
+        if (error) throw error;
+        G.toast('Artist profile saved.');
+        setTimeout(() => location.reload(), 700);
+      } catch (err) { arSave.disabled = false; G.toast((err && err.message) || 'Could not save — try again.'); }
+    });
+
+    /* artist studio: tiers */
+    const tierList = $('#tierList');
+    function renderTiers() {
+      if (!tierList) return;
+      tierList.innerHTML = myTiers.length ? myTiers.map(t => `
+        <div style="display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line-soft);">
+          <div style="flex:1">
+            <strong style="font-size:.9rem">${esc(t.name)}</strong><span class="gold" style="font-size:.82rem"> · $${Math.round(t.price_cents / 100)}/mo</span>
+            ${t.blurb ? `<p class="dim" style="font-size:.78rem">${esc(t.blurb)}</p>` : ''}
+          </div>
+          <button class="btn btn-sm" data-del-tier="${t.id}" style="border-color:rgba(224,104,126,.5); color:#e88596">Delete</button>
+        </div>`).join('')
+        : `<p class="dim" style="font-size:.82rem">No tiers yet — add one so people can support you.</p>`;
+      tierList.querySelectorAll('[data-del-tier]').forEach(b => b.addEventListener('click', async () => {
+        b.disabled = true;
+        const { error } = await sb.from('tiers').delete().eq('id', b.dataset.delTier);
+        if (error) { b.disabled = false; G.toast('Could not delete the tier — try again.'); return; }
+        const i = myTiers.findIndex(x => x.id === b.dataset.delTier);
+        if (i !== -1) myTiers.splice(i, 1);
+        renderTiers();
+        G.toast('Tier removed.');
+      }));
+    }
+    renderTiers();
+    const tAdd = $('#tAdd');
+    if (tAdd) tAdd.addEventListener('click', async () => {
+      const name = $('#tName').value.trim();
+      const price = parseInt($('#tPrice').value, 10);
+      const blurb = $('#tBlurb').value.trim();
+      const perks = $('#tPerks').value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (name.length < 2) { G.toast('Give the tier a name.'); return; }
+      if (!(price >= 1)) { G.toast('Set a monthly price of at least $1.'); return; }
+      const tier_key = slugHandle(name) || ('tier-' + Date.now().toString(36));
+      tAdd.disabled = true;
+      const { data, error } = await sb.from('tiers')
+        .insert({ artist_id: user.id, tier_key, name, price_cents: price * 100, blurb, perks, sort: myTiers.length })
+        .select('id,tier_key,name,price_cents,blurb,perks,featured,sort').single();
+      tAdd.disabled = false;
+      if (error) { G.toast(error.code === '23505' ? 'You already have a tier with a similar name.' : 'Could not add the tier — try again.'); return; }
+      myTiers.push(data);
+      renderTiers();
+      ['tName', 'tPrice', 'tBlurb', 'tPerks'].forEach(id => { $('#' + id).value = ''; });
+      G.toast('Tier added.');
+    });
 
     /* actions */
     const rcSave = $('#rcSave');

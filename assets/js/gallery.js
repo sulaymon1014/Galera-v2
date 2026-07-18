@@ -224,7 +224,9 @@
         </div>
         ${supporting
           ? `<a class="btn btn-wide" href="artist.html?a=${artist.id}#tiers">♥ You support ${esc(artist.name)} — manage</a>`
-          : `<a class="btn btn-solid btn-wide" href="artist.html?a=${artist.id}#tiers">Support ${esc(artist.name)} — from $${D.lowestPrice(artist.id)}/mo</a>`}
+          : D.lowestPrice(artist.id) > 0
+            ? `<a class="btn btn-solid btn-wide" href="artist.html?a=${artist.id}#tiers">Support ${esc(artist.name)} — from $${D.lowestPrice(artist.id)}/mo</a>`
+            : `<a class="btn btn-solid btn-wide" href="artist.html?a=${artist.id}">Visit ${esc(artist.name)}’s page</a>`}
         ${related.length ? `
         <div class="related-strip">
           <span class="eyebrow" style="font-size:.62rem">More from ${esc(artist.name)}</span>

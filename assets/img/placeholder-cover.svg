@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Artist cover placeholder">
+  <defs>
+    <linearGradient id="c" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#241f2e"/>
+      <stop offset="0.5" stop-color="#191620"/>
+      <stop offset="1" stop-color="#12101a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#c)"/>
+  <text x="800" y="470" font-family="Georgia, serif" font-size="72" fill="#b491e6" fill-opacity="0.35" text-anchor="middle" letter-spacing="8">GALERA</text>
+</svg>
