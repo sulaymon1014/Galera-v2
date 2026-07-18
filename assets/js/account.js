@@ -25,6 +25,16 @@
     const monthly = pledgeRows.reduce((s, p) => s + (p.t.price || 0), 0);
 
     $('#dashGrid').innerHTML = `
+      ${G.Auth.recovery ? `
+      <div class="dash-card reveal" style="border-color:var(--gold)">
+        <h3 class="serif">Set a new password</h3>
+        <p class="dim" style="font-size:.88rem">You arrived from a password-reset link. Choose a new password to finish — you're already signed in.</p>
+        <div class="field">
+          <label for="rcPass">New password</label>
+          <input id="rcPass" type="password" autocomplete="new-password" placeholder="8+ characters">
+        </div>
+        <button class="btn btn-sm btn-solid" id="rcSave">Update password</button>
+      </div>` : ''}
       <div class="dash-card reveal">
         <h3 class="serif">Memberships <span class="gold" style="font-size:.85rem">$${monthly}/mo</span></h3>
         ${pledgeRows.length ? pledgeRows.map(p => `
@@ -113,6 +123,20 @@
       </a>`).join('');
 
     /* actions */
+    const rcSave = $('#rcSave');
+    if (rcSave) rcSave.addEventListener('click', async () => {
+      const p = $('#rcPass').value;
+      if (p.length < 8) { G.toast('Use at least 8 characters — a phrase beats a puzzle.'); return; }
+      rcSave.disabled = true;
+      const { error } = await sb.auth.updateUser({ password: p });
+      rcSave.disabled = false;
+      if (error) { G.toast(error.message || 'Could not update the password.'); return; }
+      G.Auth.recovery = false;
+      history.replaceState(null, '', location.pathname);
+      G.toast('Password updated — you are signed in.');
+      setTimeout(() => location.reload(), 800);
+    });
+
     $('#saveProfile').addEventListener('click', async () => {
       const name = $('#pfName').value.trim();
       if (name.length < 2) { G.toast('A name needs at least two letters.'); return; }

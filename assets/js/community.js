@@ -106,7 +106,7 @@
           <p class="body">${esc(p.text)}</p>
           <div class="post-actions">
             <button data-like="${p.id || ''}" class="${liked ? 'on' : ''}">${liked ? '♥ Appreciated' : '♡ Appreciate'}</button>
-            <button data-report>⚑ Report</button>
+            <button data-report="${p.id || ''}">⚑ Report</button>
           </div>
         </div>
       </div>`;
@@ -177,7 +177,17 @@
       } catch (err) { G.toast('Could not update your appreciation — try again.'); }
       return;
     }
-    if (e.target.closest('[data-report]')) {
+    const rep = e.target.closest('[data-report]');
+    if (rep) {
+      if (!member) { G.toast('Sign in to report a post — membership is free.'); return; }
+      const postUid = rep.dataset.report;
+      if (!postUid || rep.disabled) return;
+      rep.disabled = true;
+      const { error } = await G.sb.from('reports').insert({
+        reporter_id: member.id, target_type: 'post', target_id: postUid, reason: 'flagged in forum'
+      });
+      if (error) { rep.disabled = false; G.toast('Could not send the report — try again.'); return; }
+      rep.textContent = '⚑ Reported';
       G.toast('Reported to the moderators. Thank you for carrying the room.');
     }
   });

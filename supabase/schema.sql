@@ -482,11 +482,21 @@ drop policy if exists p_read_comments  on public.comments;      create policy p_
 drop policy if exists p_read_artlikes  on public.artwork_likes; create policy p_read_artlikes  on public.artwork_likes for select using (auth.uid() = user_id);
 drop policy if exists p_read_postlikes on public.post_likes;    create policy p_read_postlikes on public.post_likes    for select using (auth.uid() = user_id);
 
--- artworks: public sees published+public+live; owners see all their own; staff see all
+-- artworks: public sees published+public+live; active members of an artist's
+-- tiers also see that artist's members-only works; owners see all their own;
+-- staff see all
 drop policy if exists p_read_artworks on public.artworks;
 create policy p_read_artworks on public.artworks for select using (
-  (deleted_at is null and status = 'published' and visibility = 'public'
-     and (published_at is null or published_at <= now()))
+  (deleted_at is null and status = 'published'
+     and (published_at is null or published_at <= now())
+     and (
+       visibility = 'public'
+       or (visibility = 'members' and exists (
+             select 1 from public.memberships m
+             where m.subscriber_id = auth.uid()
+               and m.artist_id = user_id
+               and m.status = 'active'))
+     ))
   or auth.uid() = user_id
   or public.is_staff()
 );
@@ -570,10 +580,8 @@ end $$;
 --   * RLS is ENABLED on all 16 tables. Every "using (true)" read is a
 --     deliberately public surface (profiles, follows, tiers, threads, posts,
 --     published-public artworks). Everything else fails closed.
---   * members/private artworks are readable ONLY by owner + staff today
---     (no leak). When the members feature ships, ADD a membership-aware read
---     policy so a member of an artist's tier can see that artist's
---     members-only works — until then that content is effectively private.
+--   * members artworks are readable by owner, staff, and ACTIVE members of
+--     the artist's tiers (see p_read_artworks). private stays owner+staff only.
 --   * memberships allow client self-insert (free "join tier", correct for the
 --     no-payment MVP). WHEN BILLING LANDS: move membership creation server-side
 --     (payment webhook via service_role) and DROP the client insert, or users

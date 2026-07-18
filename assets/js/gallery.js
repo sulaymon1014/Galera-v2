@@ -128,7 +128,7 @@
         <button class="fav-btn ${fav ? 'on' : ''}" data-fav="${w.uid}" aria-label="${fav ? 'Remove from' : 'Add to'} saved" title="Save">${fav ? '♥' : '♡'}</button>
         <a href="?art=${w.id}" data-open="${w.id}" aria-label="View ${esc(w.title)} by ${esc(artist.name)}">
           <div class="art-frame">
-            ${w.premium ? '<span class="badge-premium">◆ Supporters</span>' : ''}
+            ${w.members ? '<span class="badge-premium">🔒 Members only</span>' : w.premium ? '<span class="badge-premium">◆ Supporters</span>' : ''}
             <img src="${w.img}" alt="${esc(w.alt)}" loading="lazy">
             <div class="art-hover"><span class="view-tag">View work</span><span class="view-tag" style="color:var(--ink-dim)">${esc(w.cat)}</span></div>
           </div>
@@ -185,6 +185,7 @@
     const artist = D.artistById[w.artist];
     const fav = G.Favs.has(w.uid);
     const isLiked = G.Likes.has(w.uid);
+    const supporting = G.Members.has(artist.uid);   /* active member of this artist */
     const related = D.ARTWORKS.filter(x => x.id !== id && x.artist === w.artist).slice(0, 3);
 
     lbCard.innerHTML = `
@@ -206,14 +207,17 @@
           <div><dt>Posted</dt><dd>${w.weeks === 1 ? 'this week' : w.weeks + ' weeks ago'}</dd></div>
           <div><dt>Appreciations</dt><dd id="lbLikeCount">♥ ${D.fmtCount(w.likes)}</dd></div>
           <div><dt>Free download</dt><dd>Full size, watermark-free</dd></div>
-          ${w.premium ? `<div><dt>Supporter extras</dt><dd class="gold">4K · PSD · process video</dd></div>` : ''}
+          ${w.premium ? `<div><dt>Supporter extras</dt><dd class="gold">${supporting ? '✓ Unlocked — 4K · PSD · process video' : '4K · PSD · process video — locked'}</dd></div>` : ''}
+          ${w.members ? `<div><dt>Visibility</dt><dd class="gold">Members only — you have access</dd></div>` : ''}
         </dl>
         <div class="lightbox-actions">
           <button class="btn ${isLiked ? 'btn-solid' : ''}" id="lbLike">${isLiked ? '♥ Loved' : '♡ Love it'}</button>
           <button class="btn" id="lbFav">${fav ? '♥ Saved' : '♡ Save'}</button>
           <button class="btn" id="lbShare" title="Copy link">Share</button>
         </div>
-        <a class="btn btn-solid btn-wide" href="artist.html?a=${artist.id}#tiers">Support ${esc(artist.name)} — from $${D.lowestPrice(artist.id)}/mo</a>
+        ${supporting
+          ? `<a class="btn btn-wide" href="artist.html?a=${artist.id}#tiers">♥ You support ${esc(artist.name)} — manage</a>`
+          : `<a class="btn btn-solid btn-wide" href="artist.html?a=${artist.id}#tiers">Support ${esc(artist.name)} — from $${D.lowestPrice(artist.id)}/mo</a>`}
         ${related.length ? `
         <div class="related-strip">
           <span class="eyebrow" style="font-size:.62rem">More from ${esc(artist.name)}</span>

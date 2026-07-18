@@ -27,6 +27,8 @@
     user: null,
     _resolve: null,
     ready: null,
+    /* true when this page was reached via a password-reset email link */
+    recovery: /type=recovery/.test(location.hash),
     get member() { return this.user; },
     async signOut() { if (sb) await sb.auth.signOut(); }
   };
@@ -194,6 +196,7 @@
     document.dispatchEvent(new CustomEvent('galera:auth', { detail: Auth.user }));
     let lastUid = uid();
     sb.auth.onAuthStateChange(async (_evt, session) => {
+      if (_evt === 'PASSWORD_RECOVERY') Auth.recovery = true;
       Auth.user = session ? session.user : null;
       if (uid() !== lastUid) { lastUid = uid(); try { await Lib.load(); } catch (e) { console.error('[Galera] library reload error', e); } }
       renderAccount();
