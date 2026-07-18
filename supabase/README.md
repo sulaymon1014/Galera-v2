@@ -41,10 +41,10 @@ real Supabase across all stages, each verified end-to-end against the live DB:
 auth → catalog reads → memberships/likes/favourites → forum → uploads. Writes
 go through the anon client and are guarded by the RLS policies below.
 
-**Known gap (no payment MVP):** `profiles.member_count` is not yet maintained by
-a trigger, so an artist's "supporters" number does not move when a member joins
-or leaves a tier. Add a bump-trigger on `memberships` (mirroring
-`bump_follow_counts`) when you want that count to be live.
+**`profiles.member_count` trigger:** an artist's "supporters" number is kept live
+by `trg_member_counts` on `memberships` (folded into `schema.sql`; also available
+standalone as `migrations/2026-07-17_member_count_trigger.sql`). It is delta-based
+(±1), so the seeded demo supporter numbers are preserved and move from that base.
 
 ## Model (one account type)
 

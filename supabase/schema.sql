@@ -272,6 +272,41 @@ drop trigger if exists trg_memberships_touch on public.memberships;
 create trigger trg_memberships_touch before update on public.memberships
   for each row execute function public.touch_updated_at();
 
+-- maintain profiles.member_count as members join/leave/change status.
+-- DELTA-BASED (±1): preserves the seeded demo supporter numbers as a base.
+create or replace function public.bump_member_counts()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if (tg_op = 'INSERT') then
+    if (new.status = 'active') then
+      update public.profiles set member_count = member_count + 1 where id = new.artist_id;
+    end if;
+  elsif (tg_op = 'DELETE') then
+    if (old.status = 'active') then
+      update public.profiles set member_count = greatest(member_count - 1, 0) where id = old.artist_id;
+    end if;
+  elsif (tg_op = 'UPDATE') then
+    if (old.artist_id = new.artist_id) then
+      if (old.status = 'active' and new.status is distinct from 'active') then
+        update public.profiles set member_count = greatest(member_count - 1, 0) where id = new.artist_id;
+      elsif (old.status is distinct from 'active' and new.status = 'active') then
+        update public.profiles set member_count = member_count + 1 where id = new.artist_id;
+      end if;
+    else
+      if (old.status = 'active') then
+        update public.profiles set member_count = greatest(member_count - 1, 0) where id = old.artist_id;
+      end if;
+      if (new.status = 'active') then
+        update public.profiles set member_count = member_count + 1 where id = new.artist_id;
+      end if;
+    end if;
+  end if;
+  return null;
+end; $$;
+drop trigger if exists trg_member_counts on public.memberships;
+create trigger trg_member_counts after insert or update or delete on public.memberships
+  for each row execute function public.bump_member_counts();
+
 -- ============================================================
 --  per-user library: favourites (saved) + artwork likes
 -- ============================================================
