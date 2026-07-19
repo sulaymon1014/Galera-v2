@@ -105,9 +105,6 @@
       if (error) G.toast(`${b.dataset.social} sign-in isn’t enabled yet — use email for now.`);
     }));
 
-  $('#passkeyBtn').addEventListener('click', () =>
-    G.toast('Passkeys (WebAuthn) are coming — use email for now.'));
-
   $('#forgot').addEventListener('click', async (e) => {
     e.preventDefault();
     const email = $('#liEmail').value.trim();
