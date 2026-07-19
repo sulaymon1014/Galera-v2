@@ -528,6 +528,27 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.25; }
 .c-form-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .c-form-row .dim { font-size: 0.74rem; }
 
+/* catalog loading bar + failure overlay */
+.load-bar {
+  position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 2000;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold)); box-shadow: 0 0 8px var(--gold-dim);
+}
+.load-bar.go { width: 88%; transition: width 9s cubic-bezier(.1, .75, .2, 1); }
+.load-bar.done { width: 100%; opacity: 0; transition: width .25s ease, opacity .4s ease .2s; }
+@media (prefers-reduced-motion: reduce) { .load-bar { transition: none !important; } }
+
+.load-error {
+  position: fixed; inset: 0; z-index: 2100; padding: 24px;
+  display: grid; place-items: center; background: rgba(8, 7, 10, 0.92);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.load-error-card {
+  max-width: 440px; text-align: center; display: grid; gap: 14px; justify-items: center;
+  background: var(--surface); border: 1px solid var(--line); padding: 40px 32px;
+}
+.load-error-card h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); }
+.load-error-card p { font-size: 0.92rem; }
+
 /* per-upload visibility editor in the "Your uploads" strip */
 .up-vis-row { padding: 8px 2px 2px; }
 .up-vis-row select {

@@ -102,18 +102,23 @@
   };
 
   /* live catalog state (empty until loaded) */
-  const state = { ARTISTS: [], ARTWORKS: [], THREADS: [], artistById: {}, artworkById: {}, artworkByUid: {} };
+  const state = { ARTISTS: [], ARTWORKS: [], THREADS: [], artistById: {}, artworkById: {}, artworkByUid: {}, loadError: null };
+
+  const LOAD_TIMEOUT_MS = 15000;
+  const withTimeout = (p, ms) => Promise.race([
+    p, new Promise((_, rej) => setTimeout(() => rej(new Error('Catalog load timed out')), ms))
+  ]);
 
   async function load() {
     const sb = window.sb;
     if (!sb) throw new Error('Supabase client not loaded');
-    const [pr, tr, wr, thr, po] = await Promise.all([
+    const [pr, tr, wr, thr, po] = await withTimeout(Promise.all([
       sb.from('profiles').select('id,handle,name,tagline,avatar_url,cover_url,bio,statement,follower_count,member_count').eq('is_artist', true).order('follower_count', { ascending: false }),
       sb.from('tiers').select('id,artist_id,tier_key,name,price_cents,blurb,perks,featured,cta,sort').order('sort'),
       sb.from('artworks').select('id,slug,user_id,image_path,title,category,base_likes,like_count,comment_count,view_count,weeks,is_premium,visibility,alt,note,sort').is('deleted_at', null).order('sort'),
       sb.from('threads').select('id,slug,section,title,author,pinned,preview,sort').order('sort'),
       sb.from('posts').select('id,thread_id,user_id,author_name,body,created_at').is('deleted_at', null).order('created_at')
-    ]);
+    ]), LOAD_TIMEOUT_MS);
     for (const r of [pr, tr, wr, thr, po]) if (r.error) throw r.error;
 
     const byHandle = {}, byUid = {};
@@ -163,7 +168,7 @@
     state.artworkByUid = Object.fromEntries(ARTWORKS.map(w => [w.uid, w]));
   }
 
-  const ready = load().catch(e => { console.error('[Galera] catalog load failed:', (e && e.message) || e); });
+  const ready = load().catch(e => { state.loadError = e; console.error('[Galera] catalog load failed:', (e && e.message) || e); });
 
   window.GALERA = {
     get ARTISTS() { return state.ARTISTS; },
@@ -173,6 +178,7 @@
     get artistById() { return state.artistById; },
     get artworkById() { return state.artworkById; },
     get artworkByUid() { return state.artworkByUid; },
+    get loadError() { return state.loadError; },
     articleById: byId(JOURNAL),
     tiersFor: (h) => (state.artistById[h] && state.artistById[h].tiers) || [],
     lowestPrice: (h) => { const t = (state.artistById[h] && state.artistById[h].tiers) || []; return t.length ? Math.min(...t.map(x => x.price)) : 0; },

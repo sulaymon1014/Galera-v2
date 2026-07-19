@@ -287,6 +287,40 @@
     setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 450); }, ms || 3200);
   }
 
+  /* ------------------------------------------------ catalog load state
+     A slim top progress bar while the catalog resolves, and a blocking
+     retry card if it fails — so pages never sit silently blank. */
+  (function catalogLoadState() {
+    const D = window.GALERA;
+    if (!D || !D.ready) return;                 // page doesn't use the catalog
+    const bar = document.createElement('div');
+    bar.className = 'load-bar';
+    document.body.appendChild(bar);
+    requestAnimationFrame(() => bar.classList.add('go'));
+    D.ready.then(() => {
+      bar.classList.add('done');
+      setTimeout(() => bar.remove(), 500);
+      if (D.loadError) showLoadError();
+    });
+  })();
+
+  function showLoadError() {
+    if (document.querySelector('.load-error')) return;
+    const el = document.createElement('div');
+    el.className = 'load-error';
+    el.setAttribute('role', 'alert');
+    el.innerHTML = `
+      <div class="load-error-card">
+        <span class="eyebrow" style="color:var(--red)">Couldn’t load</span>
+        <h2 class="serif">The gallery didn’t load.</h2>
+        <p class="dim">We couldn’t reach the server. Check your connection and try again — your account and saved work are safe.</p>
+        <button class="btn btn-solid" id="loadRetry">Try again</button>
+      </div>`;
+    document.body.appendChild(el);
+    document.body.style.overflow = 'hidden';
+    el.querySelector('#loadRetry').addEventListener('click', () => location.reload());
+  }
+
   /* ---------------------------------- horizontal rails on wheel */
   /* Hovering a horizontally scrollable rail turns the mouse wheel
      into horizontal scroll; at either end the page scrolls again. */
