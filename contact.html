@@ -39,20 +39,22 @@
     <section class="wrap section" style="padding-top:0">
       <div class="split" style="align-items:start">
 
-        <form class="form-card reveal" id="contactForm" novalidate style="max-width:none; margin:0">
+        <form class="form-card reveal" id="contactForm" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate style="max-width:none; margin:0">
+          <input type="hidden" name="form-name" value="contact">
+          <p hidden aria-hidden="true"><label>Leave this empty: <input name="bot-field"></label></p>
           <div class="field">
             <label for="ctName">Your name</label>
-            <input id="ctName" type="text" autocomplete="name" required>
+            <input id="ctName" name="name" type="text" autocomplete="name" required>
             <span class="err">Please tell us your name.</span>
           </div>
           <div class="field">
             <label for="ctEmail">Email</label>
-            <input id="ctEmail" type="email" autocomplete="email" required>
+            <input id="ctEmail" name="email" type="email" autocomplete="email" required>
             <span class="err">Please enter a valid email address.</span>
           </div>
           <div class="field">
             <label for="ctTopic">Topic</label>
-            <select id="ctTopic">
+            <select id="ctTopic" name="topic">
               <option>Billing &amp; memberships</option>
               <option>I’m an artist — opening a page</option>
               <option>Community &amp; moderation</option>
@@ -62,11 +64,11 @@
           </div>
           <div class="field">
             <label for="ctMsg">Message</label>
-            <textarea id="ctMsg" rows="6" required placeholder="Tell us what’s on your mind — or your canvas…"></textarea>
+            <textarea id="ctMsg" name="message" rows="6" required placeholder="Tell us what’s on your mind — or your canvas…"></textarea>
             <span class="err">A message helps us answer.</span>
           </div>
           <button class="btn btn-solid" type="submit">Send message</button>
-          <p class="form-foot dim" style="font-size:.75rem; text-align:left">Demo form — nothing is transmitted. In production this reaches a person, not a ticket queue.</p>
+          <p class="form-foot dim" style="font-size:.75rem; text-align:left">We read every message — usually within a day.</p>
         </form>
 
         <div class="reveal" data-delay="1" style="display:grid; gap:24px; align-content:start;">

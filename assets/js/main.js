@@ -424,15 +424,22 @@
     setTimeout(() => document.body.appendChild(c), 1600);
   }
 
-  /* newsletter forms (any page) */
-  document.addEventListener('submit', e => {
+  /* newsletter forms (any page) — submitted to Netlify Forms */
+  document.addEventListener('submit', async e => {
     const f = e.target.closest('.news-form');
     if (!f) return;
     e.preventDefault();
-    const em = $('input', f).value.trim();
+    const emailInput = $('input[type=email]', f);
+    const em = emailInput.value.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { toast('Please enter a valid email address.'); return; }
-    $('input', f).value = '';
-    toast('Welcome to the letter. First edition arrives Sunday. (Demo — nothing was sent.)');
+    const btn = f.querySelector('button[type=submit]'); if (btn) btn.disabled = true;
+    try {
+      await fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(new FormData(f)).toString() });
+      f.reset();
+      toast('Welcome to the letter. First edition arrives Sunday.');
+    } catch (err) {
+      toast('Could not subscribe just now — please try again.');
+    } finally { if (btn) btn.disabled = false; }
   });
 
   window.Galera = { Auth, Lib, Favs, Likes, Members, PostLikes, Follows, toast, watchReveals, esc, store, displayName, sb };
