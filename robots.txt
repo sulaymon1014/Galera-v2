@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+# Private / no SEO value
+Disallow: /account.html
+
+# NOTE: update this host when the production domain is set.
+Sitemap: https://artgalera.netlify.app/sitemap.xml

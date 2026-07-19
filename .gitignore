@@ -1,0 +1,21 @@
+# Environment / secrets — never commit
+.env
+.env.*
+!.env.example
+*.key
+service-role*.txt
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Node (if tooling is added later)
+node_modules/
+npm-debug.log*
+
+# Local build / tooling scratch
+.netlify/
+dist/

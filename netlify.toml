@@ -1,0 +1,45 @@
+# ============================================================
+#  Galera — Netlify deploy config
+# ============================================================
+
+[build]
+  # Static site (no bundler). This prune step keeps server-side SQL, the
+  # planning doc, and tooling OUT of the published CDN. 404.html at the root is
+  # served automatically for unmatched paths.
+  command = "rm -rf supabase .claude tools *.docx README.md && echo 'pruned non-public files'"
+  publish = "."
+
+# ---------- security headers (apply to everything) ----------
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+
+# ---------- caching ----------
+# HTML + JS/CSS are not fingerprinted, so revalidate (cheap via ETag) to avoid
+# shipping stale app code. Bundled images rarely change — cache them hard.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/assets/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/assets/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/assets/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
