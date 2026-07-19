@@ -110,7 +110,7 @@
     const [pr, tr, wr, thr, po] = await Promise.all([
       sb.from('profiles').select('id,handle,name,tagline,avatar_url,cover_url,bio,statement,follower_count,member_count').eq('is_artist', true).order('follower_count', { ascending: false }),
       sb.from('tiers').select('id,artist_id,tier_key,name,price_cents,blurb,perks,featured,cta,sort').order('sort'),
-      sb.from('artworks').select('id,slug,user_id,image_path,title,category,base_likes,like_count,comment_count,weeks,is_premium,visibility,alt,note,sort').is('deleted_at', null).order('sort'),
+      sb.from('artworks').select('id,slug,user_id,image_path,title,category,base_likes,like_count,comment_count,view_count,weeks,is_premium,visibility,alt,note,sort').is('deleted_at', null).order('sort'),
       sb.from('threads').select('id,slug,section,title,author,pinned,preview,sort').order('sort'),
       sb.from('posts').select('id,thread_id,user_id,author_name,body,created_at').is('deleted_at', null).order('created_at')
     ]);
@@ -141,7 +141,7 @@
       return {
         uid: w.id, id: w.slug, artist: a ? a.id : null, img: w.image_path, title: w.title, cat: w.category,
         likes: (w.base_likes || 0) + (w.like_count || 0), comments: w.comment_count || 0,
-        weeks: w.weeks, premium: w.is_premium,
+        views: w.view_count || 0, weeks: w.weeks, premium: w.is_premium,
         members: w.visibility === 'members',
         alt: w.alt || '', note: w.note || '', ar: arOf(w.image_path)
       };

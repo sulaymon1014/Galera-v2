@@ -52,6 +52,21 @@
     const d = Math.floor(h / 24); return d + (d === 1 ? ' day ago' : ' days ago');
   };
 
+  /* view tracking: record one view per artwork per browser session (so back-and-
+     forth navigation doesn't inflate the count). The DB trigger bumps view_count;
+     anon views go in with user_id null (allowed by the p_ins_view policy). */
+  const viewedThisSession = (() => {
+    try { return new Set(JSON.parse(sessionStorage.getItem('galera_viewed') || '[]')); } catch { return new Set(); }
+  })();
+  function recordView(w) {
+    if (!w || viewedThisSession.has(w.uid)) return;
+    viewedThisSession.add(w.uid);
+    try { sessionStorage.setItem('galera_viewed', JSON.stringify([...viewedThisSession])); } catch { }
+    w.views += 1;                       // reflect locally (meta + sort)
+    const uid = G.Auth.member ? G.Auth.member.id : null;
+    G.sb.from('artwork_views').insert({ artwork_id: w.uid, user_id: uid }).then(() => { }, () => { });
+  }
+
   function matchesFacet(w, facet) {
     const s = sel[facet.key];
     if (!s.size) return true;
@@ -60,11 +75,14 @@
   function filtered(excludeKey) {
     return D.ARTWORKS.filter(w => FACETS.every(f => f.key === excludeKey || matchesFacet(w, f)));
   }
+  /* trending blends real views (weighted) with likes, decayed by age */
+  const trendScore = (w) => (w.views * 4 + w.likes) / (w.weeks + 2);
   function sorted(list) {
     const l = [...list];
     if (sortBy === 'newest') l.sort((a, b) => a.weeks - b.weeks);
     else if (sortBy === 'loved') l.sort((a, b) => b.likes - a.likes);
-    else l.sort((a, b) => (b.likes / (b.weeks + 2)) - (a.likes / (a.weeks + 2)));
+    else if (sortBy === 'viewed') l.sort((a, b) => b.views - a.views);
+    else l.sort((a, b) => trendScore(b) - trendScore(a));
     return l;
   }
 
@@ -189,6 +207,7 @@
     const w = D.artworkById[id];
     if (!w) return;
     currentId = id;
+    recordView(w);
     const artist = D.artistById[w.artist];
     const fav = G.Favs.has(w.uid);
     const isLiked = G.Likes.has(w.uid);
@@ -213,6 +232,7 @@
           <div><dt>Category</dt><dd>${esc(w.cat)}</dd></div>
           <div><dt>Posted</dt><dd>${w.weeks === 1 ? 'this week' : w.weeks + ' weeks ago'}</dd></div>
           <div><dt>Appreciations</dt><dd id="lbLikeCount">♥ ${D.fmtCount(w.likes)}</dd></div>
+          <div><dt>Views</dt><dd>${D.fmtCount(w.views)}</dd></div>
           <div><dt>Free download</dt><dd>Full size, watermark-free</dd></div>
           ${w.premium ? `<div><dt>Supporter extras</dt><dd class="gold">${supporting ? '✓ Unlocked — 4K · PSD · process video' : '4K · PSD · process video — locked'}</dd></div>` : ''}
           ${w.members ? `<div><dt>Visibility</dt><dd class="gold">Members only — you have access</dd></div>` : ''}
