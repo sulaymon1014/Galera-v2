@@ -528,6 +528,14 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.25; }
 .c-form-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .c-form-row .dim { font-size: 0.74rem; }
 
+/* per-upload visibility editor in the "Your uploads" strip */
+.up-vis-row { padding: 8px 2px 2px; }
+.up-vis-row select {
+  width: 100%; background: var(--surface); border: 1px solid var(--line);
+  color: var(--ink-dim); padding: 7px 10px; font-size: 0.78rem;
+}
+.up-vis-row select:focus { outline: none; border-color: var(--gold-dim); }
+
 /* ---------- split sections ---------- */
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(30px, 5vw, 80px); align-items: center; }
 @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }

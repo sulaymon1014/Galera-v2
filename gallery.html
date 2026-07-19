@@ -94,10 +94,19 @@
           <label for="upCat">Category</label>
           <select id="upCat"></select>
         </div>
+        <div class="field" id="upVisField" hidden>
+          <label for="upVis">Visibility</label>
+          <select id="upVis">
+            <option value="public">Public — free for everyone</option>
+            <option value="premium">◆ Premium — public, supporter extras</option>
+            <option value="members">🔒 Members only — visible to your supporters</option>
+          </select>
+          <span class="hint" id="upVisHint">Free for everyone to see and download.</span>
+        </div>
         <div class="field">
           <label for="upFile">Image file</label>
           <input id="upFile" type="file" accept="image/*" required>
-          <span class="hint">JPG or PNG. Stored in this browser only (demo) — resized to 1280px.</span>
+          <span class="hint">JPG or PNG — resized to 1280px and stored on your page.</span>
           <span class="err">Choose an image to upload.</span>
         </div>
         <button class="btn btn-solid" type="submit">Publish to my page</button>

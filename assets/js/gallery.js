@@ -415,12 +415,26 @@
 
   const storagePath = (url) => { const i = String(url).indexOf('/artworks/'); return i === -1 ? null : url.slice(i + 10); };
 
+  /* the three visibility modes map onto (visibility, is_premium). Only artists
+     get the choice — premium/members gate against an artist's tiers. */
+  const VIS_MODES = {
+    public:  { badge: '',           patch: { visibility: 'public',  is_premium: false }, hint: 'Free for everyone to see and download.' },
+    premium: { badge: '◆ Premium',  patch: { visibility: 'public',  is_premium: true  }, hint: 'Publicly visible; 4K/PSD/process extras are gated to your supporters.' },
+    members: { badge: '🔒 Members',  patch: { visibility: 'members', is_premium: false }, hint: 'Only your active members can see this work.' }
+  };
+  const modeOf = (row) => row.visibility === 'members' ? 'members' : row.is_premium ? 'premium' : 'public';
+  const iAmArtist = () => !!(G.Auth.member && D.ARTISTS.some(a => a.uid === G.Auth.member.id));
+
+  const upVisField = $('#upVisField'), upVis = $('#upVis'), upVisHint = $('#upVisHint');
+  if (iAmArtist()) upVisField.hidden = false;                 // non-artists upload public only
+  if (upVis) upVis.addEventListener('change', () => { upVisHint.textContent = VIS_MODES[upVis.value].hint; });
+
   async function loadUploads() {
     if (!G.Auth.member) { uploads = []; return; }
     const { data, error } = await G.sb.from('artworks')
-      .select('id,slug,title,category,image_path')
+      .select('id,slug,title,category,image_path,visibility,is_premium')
       .eq('user_id', G.Auth.member.id).order('created_at', { ascending: false });
-    if (!error && data) uploads = data.map(w => ({ id: w.id, slug: w.slug, title: w.title, cat: w.category, img: w.image_path }));
+    if (!error && data) uploads = data.map(w => ({ id: w.id, slug: w.slug, title: w.title, cat: w.category, img: w.image_path, visibility: w.visibility, premium: w.is_premium }));
   }
 
   function renderUploads() {
@@ -430,15 +444,29 @@
       <div style="margin-bottom:30px">
         <span class="eyebrow" style="margin-bottom:14px">Your uploads (${uploads.length})</span>
         <div class="feat-row" style="margin-top:16px">
-          ${uploads.map((u) => `
+          ${uploads.map((u) => {
+            const mode = modeOf({ visibility: u.visibility, is_premium: u.premium });
+            return `
             <div class="art-card">
               <button class="fav-btn on" data-del-upload="${u.id}" aria-label="Delete upload" title="Delete">✕</button>
-              <div class="art-frame"><img src="${u.img}" alt="${esc(u.title)}" loading="lazy"></div>
+              <div class="art-frame">
+                ${VIS_MODES[mode].badge ? `<span class="badge-premium">${VIS_MODES[mode].badge}</span>` : ''}
+                <img src="${u.img}" alt="${esc(u.title)}" loading="lazy">
+              </div>
               <div class="art-caption">
                 <div><div class="t">${esc(u.title)}</div><div class="a">You · ${esc(u.cat)}</div></div>
                 <div class="p">♥ 0</div>
               </div>
-            </div>`).join('')}
+              ${iAmArtist() ? `
+              <div class="up-vis-row">
+                <select data-vis-edit="${u.id}" aria-label="Change visibility of ${esc(u.title)}">
+                  <option value="public" ${mode === 'public' ? 'selected' : ''}>Public</option>
+                  <option value="premium" ${mode === 'premium' ? 'selected' : ''}>◆ Premium</option>
+                  <option value="members" ${mode === 'members' ? 'selected' : ''}>🔒 Members only</option>
+                </select>
+              </div>` : ''}
+            </div>`;
+          }).join('')}
         </div>
       </div>`;
     /* size each frame to its image's natural aspect ratio once it loads */
@@ -461,6 +489,23 @@
     uploads = uploads.filter(x => x.id !== id);
     renderUploads();
     G.toast('Upload removed.');
+  });
+  /* edit an upload's visibility later (artists only) */
+  $('#uploadStrip').addEventListener('change', async (e) => {
+    const sel = e.target.closest('[data-vis-edit]');
+    if (!sel) return;
+    const id = sel.dataset.visEdit;
+    const u = uploads.find(x => x.id === id);
+    if (!u) return;
+    const prev = modeOf({ visibility: u.visibility, is_premium: u.premium });
+    const mode = sel.value;
+    sel.disabled = true;
+    const { error } = await G.sb.from('artworks').update(VIS_MODES[mode].patch).eq('id', id);
+    sel.disabled = false;
+    if (error) { G.toast('Could not update visibility — try again.'); sel.value = prev; return; }
+    u.visibility = VIS_MODES[mode].patch.visibility; u.premium = VIS_MODES[mode].patch.is_premium;
+    renderUploads();
+    G.toast('Visibility updated.');
   });
 
   $('#uploadOpen').addEventListener('click', () => {
@@ -506,12 +551,13 @@
         const up = await G.sb.storage.from('artworks').upload(path, blob, { contentType: 'image/jpeg' });
         if (up.error) { if (btn) btn.disabled = false; G.toast('Upload failed — try again.'); return; }
         const publicUrl = G.sb.storage.from('artworks').getPublicUrl(path).data.publicUrl;
+        const vis = VIS_MODES[iAmArtist() ? (upVis.value || 'public') : 'public'].patch;
         const ins = await G.sb.from('artworks')
-          .insert({ user_id: uid, title: t, image_path: publicUrl, category: $('#upCat').value, slug: slugify(t) })
-          .select('id,slug,title,category,image_path').single();
+          .insert({ user_id: uid, title: t, image_path: publicUrl, category: $('#upCat').value, slug: slugify(t), visibility: vis.visibility, is_premium: vis.is_premium })
+          .select('id,slug,title,category,image_path,visibility,is_premium').single();
         if (btn) btn.disabled = false;
         if (ins.error) { await G.sb.storage.from('artworks').remove([path]); G.toast('Could not save your artwork — try again.'); return; }
-        uploads.unshift({ id: ins.data.id, slug: ins.data.slug, title: ins.data.title, cat: ins.data.category, img: ins.data.image_path });
+        uploads.unshift({ id: ins.data.id, slug: ins.data.slug, title: ins.data.title, cat: ins.data.category, img: ins.data.image_path, visibility: ins.data.visibility, premium: ins.data.is_premium });
         $('#uploadForm').reset();
         closeUpload();
         renderUploads();
